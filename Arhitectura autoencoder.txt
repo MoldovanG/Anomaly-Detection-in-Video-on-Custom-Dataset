@@ -1,0 +1,4 @@
+encoder cu : 3 perechi de tipul : conv + max-pooling 
+decoder cu : 
+	3 perechi de tipul : upsampling + conv  
+	1 layer conv pentru a produce rezultatul final
