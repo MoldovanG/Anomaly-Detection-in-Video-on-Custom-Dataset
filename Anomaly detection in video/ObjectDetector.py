@@ -79,17 +79,17 @@ class ObjectDetector:
 
     def get_detections_and_cropped_sections(self,frame,frame_d3,frame_p3):
         """
-        :param frame:
-        :param frame_d3:
-        :param frame_p3:
+        :param frame: mxnet.NDArray
+        :param frame_d3: mxnet.NDArray
+        :param frame_p3: mxnet.NDArray
         :return: A pair formed of :
                         - np.array containg detected object appearence of the t frame.
                         - np.array containg cropped image of the t-3 frame of the corresponding detected object
                         - np.array containg cropped image of the t+3 frame of the corresponding detected object
         """
         x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
-        x, img_d3 = data.transforms.presets.ssd.transform_test(frame_d3, short=512)
-        x, img_p3 = data.transforms.presets.ssd.transform_test(frame_p3, short=512)
+        z, img_d3 = data.transforms.presets.ssd.transform_test(frame_d3, short=512)
+        v, img_p3 = data.transforms.presets.ssd.transform_test(frame_p3, short=512)
         class_IDs, scores, bounding_boxes = self.net(x)
         detections = self.get_cropped_detections(img,bounding_boxes,scores)
         cropped_d3 = self.get_cropped_detections(img_d3,bounding_boxes,scores)

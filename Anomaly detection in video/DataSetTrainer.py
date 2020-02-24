@@ -7,6 +7,9 @@ from ObjectDetector import ObjectDetector
 from VideoProcessor import VideoProcessor
 
 
+
+
+
 class DataSetTrainer:
     """
     Class used for wrapping up the training process on a specific dataset.
@@ -24,6 +27,8 @@ class DataSetTrainer:
         """
         self.dataset_directory_path = dataset_directory_path
         self.total_objects, self.total_gradients = self.__get_objects_and_gradients(verbose=1)
+        self.total_objects= self.prepare_data_for_CNN(self.total_objects)
+        self.total_gradients = self.prepare_data_for_CNN(self.total_gradients)
         self.autoencoder_images = AutoEncoderModel(self.total_objects, 'raw_object_autoencoder')
         self.autoecoder_gradients = AutoEncoderModel(self.total_gradients, 'gradient_object_autoencoder')
 
@@ -125,4 +130,10 @@ class DataSetTrainer:
         sobel = cv2.normalize(src=sobel, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX,
                               dtype=cv2.CV_8U)
         return sobel
+
+    def prepare_data_for_CNN(self,array):
+        transformed = []
+        for i in range(array.shape[0]):
+            transformed.append(array[i] / 255)
+        return transformed
 

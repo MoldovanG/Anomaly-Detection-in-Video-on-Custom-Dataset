@@ -1,16 +1,13 @@
 import os
 
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+import numpy as np
+from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
-from keras import backend as K
-from keract import get_activations
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.optimizers import SGD, Adam, RMSprop
-from keras.callbacks import TensorBoard
+from tensorflow.keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
-
-import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 class AutoEncoderModel:
@@ -51,10 +48,10 @@ class AutoEncoderModel:
         encoder = Model(input_img, encoded)
 
         # compiling the models using Adam optimizer and mean squared error as loss
-        optimizer = Adam(lr=10 ** -4)
+        optimizer = Adam(lr=10 ** -3)
         encoder.compile(optimizer=optimizer, loss='mse')
         autoencoder.compile(optimizer=optimizer, loss='mse')
-
+        print(autoencoder.summary())
         return autoencoder, encoder
 
     def __train_autoencoder(self, input_images):
@@ -74,25 +71,24 @@ class AutoEncoderModel:
             early_stopping_monitor = EarlyStopping(patience=4)
             data_train, data_test, gt_train, gt_test = train_test_split(input_images, input_images, test_size=0.20,
                                                                         random_state=42)
-            self.autoencoder.fit(data_train, gt_train,
+            self.autoencoder.fit(data_train, data_train,
                                  epochs=self.num_epochs,
                                  batch_size=self.batch_size,
-                                 shuffle=True,
-                                 validation_data=(data_test, gt_test),
+                                 validation_data=(data_test, data_test),
                                  callbacks=[checkpoint_callback, early_stopping_monitor])
         else:
             self.autoencoder.load_weights(self.checkpoint_dir + '/weights.hdf5')
 
-    def get_encoded_state(self, images):
+    def get_encoded_state(self, image):
         """
         Parameters
         ----------
-        images - np.array containing the images that need to be encoded
+        images - np.array containing the image that need to be encoded
 
         Returns
         -------
         np.array containing the encoded images, predicted by the encoder.
         """
-
-        encodings = self.encoder.predict(images)
-        return encodings
+        input = np.expand_dims(image,axis = 0)
+        encodings = self.encoder.predict(input)
+        return encodings[0]

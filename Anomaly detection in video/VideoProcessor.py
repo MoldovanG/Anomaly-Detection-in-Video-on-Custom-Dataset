@@ -8,7 +8,7 @@ from ObjectDetector import ObjectDetector
 
 class VideoProcessor:
     """
-    Class used for reading a processing a video
+    Class used for reading and processing a video
     The scope is to obtain all the detected objects in all the frames toghether with their computed gradient.
 
     Attributes
