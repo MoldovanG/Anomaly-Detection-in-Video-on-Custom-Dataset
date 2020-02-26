@@ -42,7 +42,7 @@ class DataSetTrainer:
         """
         gradients = np.resize([], (0, 64, 64, 1))
         objects = np.resize([], (0, 64, 64, 1))
-        training_directory = "training_videos_small"
+        training_directory = "training_videos"
         for video_name in os.listdir(os.path.join(self.dataset_directory_path, training_directory)):
             print(video_name)
             video_name_without_extension = video_name.split(".")[0]
@@ -135,5 +135,5 @@ class DataSetTrainer:
         transformed = []
         for i in range(array.shape[0]):
             transformed.append(array[i] / 255)
-        return transformed
+        return np.array(transformed)
 

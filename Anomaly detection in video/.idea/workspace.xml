@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="367762fb-c791-4bc0-ac3c-1ad1e14253b3" name="Default Changelist" comment="" />
+    <list default="true" id="367762fb-c791-4bc0-ac3c-1ad1e14253b3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../.idea/Licenta.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/code/.idea/code.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Licenta.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Licenta.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AutoEncoderModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/AutoEncoderModel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/checkpoints/checkpoints_gradient_object_autoencoder/weights.hdf5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/checkpoints/checkpoints_raw_object_autoencoder/weights.hdf5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_videos/03.avi" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_videos/04.avi" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_videos/07.avi" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_videos/13.avi" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_videos/14.avi" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataSetTrainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/DataSetTrainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DataSetTrainer_Stage2.py" beforeDir="false" afterPath="$PROJECT_DIR$/DataSetTrainer_Stage2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/VideoProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/VideoProcessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/VideoProcessor_Stage2.py" beforeDir="false" afterPath="$PROJECT_DIR$/VideoProcessor_Stage2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/playground.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/playground2.py" beforeDir="false" afterPath="$PROJECT_DIR$/playground2.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,7 +35,11 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
   <component name="ProjectId" id="1Y7cGX9WyYur817ZM0rR3Hvqf5c" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -22,6 +47,8 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.playground2">
@@ -100,22 +127,26 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1313" height="271" key="GridCell.Tab.0.bottom" timestamp="1582536357367">
-      <screen x="0" y="0" width="1333" height="849" />
+    <state width="1830" height="260" key="GridCell.Tab.0.bottom" timestamp="1582746007451">
+      <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.bottom/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1313" height="271" key="GridCell.Tab.0.center" timestamp="1582536357367">
-      <screen x="0" y="0" width="1333" height="849" />
+    <state width="1830" height="260" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1582746007451" />
+    <state width="1830" height="260" key="GridCell.Tab.0.center" timestamp="1582746007450">
+      <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.center/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1313" height="271" key="GridCell.Tab.0.left" timestamp="1582536357367">
-      <screen x="0" y="0" width="1333" height="849" />
+    <state width="1830" height="260" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1582746007450" />
+    <state width="1830" height="260" key="GridCell.Tab.0.left" timestamp="1582746007450">
+      <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.left/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1313" height="271" key="GridCell.Tab.0.right" timestamp="1582536357367">
-      <screen x="0" y="0" width="1333" height="849" />
+    <state width="1830" height="260" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1582746007450" />
+    <state width="1830" height="260" key="GridCell.Tab.0.right" timestamp="1582746007450">
+      <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.right/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
+    <state width="1830" height="260" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1582746007450" />
     <state width="1313" height="271" key="GridCell.Tab.1.bottom" timestamp="1582536357367">
       <screen x="0" y="0" width="1333" height="849" />
     </state>
@@ -132,14 +163,19 @@
       <screen x="0" y="0" width="1333" height="849" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.1.right/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state x="177" y="69" key="SettingsEditor" timestamp="1582532817028">
-      <screen x="0" y="0" width="1333" height="849" />
+    <state x="313" y="113" key="SettingsEditor" timestamp="1582710012378">
+      <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="177" y="69" key="SettingsEditor/0.0.1333.849@0.0.1333.849" timestamp="1582532817028" />
+    <state x="313" y="113" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1582710012378" />
     <state x="366" y="251" key="com.intellij.ide.util.TipDialog" timestamp="1582382078542">
       <screen x="0" y="0" width="1333" height="849" />
     </state>
     <state x="366" y="251" key="com.intellij.ide.util.TipDialog/0.0.1333.849@0.0.1333.849" timestamp="1582382078542" />
+    <state x="641" y="119" width="704" height="867" key="find.popup" timestamp="1582719605683">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="641" y="119" width="704" height="867" key="find.popup/67.27.1853.1053@67.27.1853.1053" timestamp="1582719605683" />
     <state x="330" y="170" width="672" height="678" key="search.everywhere.popup" timestamp="1582300920282">
       <screen x="0" y="0" width="1333" height="849" />
     </state>

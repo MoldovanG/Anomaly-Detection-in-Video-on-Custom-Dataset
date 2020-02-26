@@ -49,7 +49,7 @@ class VideoProcessor_Stage2:
           frame_d3 = frames[i-3]
           frame_p3 = frames[i+3]
           feature_vectors = self.__generate_feature_vectors(frame, frame_d3, frame_p3)
-          print('\r',' Number of frames processed : %d ..... ' % (i), end='')
+          print('\r','Number of frames processed : %d ..... ' % (i), end='',flush=True)
           for vector in feature_vectors:
             total_feature_vectors.append(vector)
         print()

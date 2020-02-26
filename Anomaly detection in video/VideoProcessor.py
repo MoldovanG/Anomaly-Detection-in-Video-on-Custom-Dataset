@@ -49,7 +49,7 @@ class VideoProcessor:
                                       dtype=cv2.CV_8U)
                 objects.append(np.resize(image, (64, 64, 1)))
                 gradients.append(np.resize(sobel, (64, 64, 1)))
-            print('\r',' Number of frames processed : %d ..... ' % (counter), end='')
+            print('\r',' Number of frames processed : %d ..... ' % (counter), end='',flush='True')
             counter = counter + 1
         print()
 
