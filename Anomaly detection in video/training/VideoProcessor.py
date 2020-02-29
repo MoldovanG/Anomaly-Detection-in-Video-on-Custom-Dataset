@@ -34,8 +34,8 @@ class VideoProcessor:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame = mx.nd.array(frame)
             frame = frame.astype(np.uint8)
-            object_detector = ObjectDetector()
-            detections = object_detector.get_object_detections(frame)
+            object_detector = ObjectDetector(frame)
+            detections = object_detector.get_object_detections()
             for image in detections:
                 # Get x-gradient in "sx"
                 sx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)

@@ -64,12 +64,9 @@ class VideoProcessor_Stage2:
       :param frame_d3 : mxnet.NDarray - the frame corresponding to t-3 compared to the initial frame. d3 comes from delta3
       :param frame_p3 : mxnet.NDarray  - the frame corresponding to t+3 compared to the initial frame. p3 comes from plus3
       """
-      object_detector = ObjectDetector()
-      bounding_boxes, score = object_detector.get_bboxes_and_scores(frame)
-      cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame, frame_d3,
-                                                                                                       frame_p3,
-                                                                                                       bounding_boxes,
-                                                                                                       score)
+      object_detector = ObjectDetector(frame)
+      cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame_d3,
+                                                                                                       frame_p3)
       gradients_d3 = self.__prepare_data_for_CNN( self.__get_gradients(cropped_d3))
       gradients_p3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)

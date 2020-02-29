@@ -71,34 +71,6 @@ class DataSetTrainer:
                 print(objects.shape)
         return objects, gradients
 
-    def __get_feature_vectors(self,frame,frame_d3, frame_p3):
-        """
-        Given 3 frames that represent a certain frame at time t, t-3,and t+3, returns a list of feature_vectors obtained
-        by running all the detected objects and their respective gradients through the pretrained autoencoders, and then concatenate
-        the result in order to obtain the feature vector.
-
-        :param frame: np.array - the frame that need to be analysed.
-        :param frame_d3 : np.array  - the frame corresponding to t-3 compared to the initial frame. d3 comes from delta3
-        :param frame_p3 : np.array  - the frame corresponding to t+3 compared to the initial frame. p3 comes from plus3
-        """
-        object_detector = ObjectDetector()
-        bounding_boxes, score = object_detector.get_bboxes_and_scores(frame)
-        cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame,
-                                                                                                         frame_d3,
-                                                                                                         frame_p3,
-                                                                                                         bounding_boxes,
-                                                                                                         score)
-        gradients_d3 = self.__get_gradients(cropped_d3)
-        gradients_p3 = self.__get_gradients(cropped_p3)
-        list_of_feature_vectors = []
-        for i in range(cropped_detections.shape[0]):
-            apperance_features = self.autoencoder_images.get_encoded_state(np.resize(cropped_detections[i],(64,64,1)))
-            motion_features_d3 = self.autoecoder_gradients.get_encoded_state(np.resize(gradients_d3[i],(64,64,1)))
-            motion_features_p3 = self.autoecoder_gradients.get_encoded_state(np.resize(gradients_p3[i],(64,64,1)))
-            feature_vector = np.concatenate(apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten())
-            list_of_feature_vectors.append(feature_vector)
-        return np.array(list_of_feature_vectors)
-
     def write_to_folder(self, array, folder):
         for num, image in enumerate(array, start=0):
             cv2.imwrite(os.path.join(folder, str(num) + ".bmp"), image[:, :, 0])
@@ -112,25 +84,6 @@ class DataSetTrainer:
         print()
 
         return np.array(array)
-
-    def __get_gradients(self, array):
-        transformed = []
-        for image in array:
-            gradient = self.__get_gradient(image)
-            transformed.append(gradient)
-        return np.array(transformed)
-
-    def __get_gradient(self, image):
-        # Get x-gradient in "sx"
-        sx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
-        # Get y-gradient in "sy"
-        sy = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
-        # Get square root of sum of squares
-        sobel = np.hypot(sx, sy)
-        sobel = sobel.astype(np.float32)
-        sobel = cv2.normalize(src=sobel, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX,
-                              dtype=cv2.CV_8U)
-        return sobel
 
     def prepare_data_for_CNN(self,array):
         transformed = []

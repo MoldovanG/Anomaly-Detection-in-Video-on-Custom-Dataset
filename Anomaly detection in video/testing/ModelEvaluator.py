@@ -3,6 +3,7 @@ import os
 import cv2
 import mxnet as mx
 import numpy as np
+import scipy
 
 from gluoncv import  utils,data
 from training.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
@@ -12,10 +13,10 @@ from matplotlib import pyplot as plt
 
 class ModelEvaluator:
 
-    def __init__(self,trainer_stage2 : DataSetTrainer_Stage2, dataset_directory_path):
+    def __init__(self,trainer_stage2 : DataSetTrainer_Stage2, dataset_directory_path,ground_truth_directory):
         self.trainer_stage2 = trainer_stage2
         self.dataset_directory_path = dataset_directory_path
-        self.object_detector = ObjectDetector()
+        self.ground_truth_directory = ground_truth_directory
 
 
     def evaluate_dataset(self):
@@ -31,6 +32,9 @@ class ModelEvaluator:
         frames = []
         counter = 1
         print("Processing video starts ...")
+        ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,"8_label.mat")).get('volLabel')
+        number_of_detections = 0
+        number_of_correct_detections = 0
         while True:
             ret, frame = video.read()
             if ret == 0:
@@ -43,6 +47,7 @@ class ModelEvaluator:
 
         total_feature_vectors = []
         for i in range(3, len(frames) - 3):
+            frame_ground_truth = ground_truth_detections[0][i]
             frame = frames[i]
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
@@ -50,18 +55,30 @@ class ModelEvaluator:
             print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
             printable_frame = img
+            ratio1 = printable_frame.shape[0]/frame.shape[0]
+            ratio2 = printable_frame.shape[1]/frame.shape[1]
+            copy_frame = frame.asnumpy()
+            print(copy_frame.shape)
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
                 c1,l1,c2,l2 = bounding_boxes[idx]
+                c1 = int(c1/ratio2)
+                c2 = int(c2/ratio2)
+                l1 = int(l1/ratio1)
+                l2 = int(l2/ratio2)
                 if score == 0:
+                    number_of_detections = number_of_detections + 1
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
-                    cv2.rectangle(printable_frame,top_corner,bottom_corner,color=(0,0,0), thickness=2)
-            cv2.imshow("frame", printable_frame)
+                    if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
+                        number_of_correct_detections = number_of_correct_detections + 1
+                        cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
+                    else:
+                        cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
+            cv2.imshow("frame", copy_frame)
             cv2.waitKey(0)
-            # ax = utils.viz.plot_bbox(printable_frame, bounding_boxes, thresh=-100)
-            # plt.show()
+        print("Accuraccy is :", str(number_of_correct_detections* (100/number_of_detections)),"%")
 
     def __get_feature_vectors_and_bboxes(self, frame, frame_d3, frame_p3):
       """
@@ -73,13 +90,10 @@ class ModelEvaluator:
       :param frame_d3 : mxnet.NDarray - the frame corresponding to t-3 compared to the initial frame. d3 comes from delta3
       :param frame_p3 : mxnet.NDarray  - the frame corresponding to t+3 compared to the initial frame. p3 comes from plus3
       """
-      object_detector = ObjectDetector()
-      bounding_boxes,score = object_detector.get_bboxes_and_scores(frame)
-      new_score = score[0].asnumpy()
-      bboxes = bounding_boxes[0].asnumpy()
-      bboxes = self.filter_bboxes(bboxes,new_score)
+      object_detector = ObjectDetector(frame)
+      bounding_boxes = object_detector.bounding_boxes
 
-      cropped_detections, cropped_d3, cropped_p3  = object_detector.get_detections_and_cropped_sections(frame,frame_d3,frame_p3,bounding_boxes,score)
+      cropped_detections, cropped_d3, cropped_p3  = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
       gradients_d3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_d3))
       gradients_p3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)
@@ -90,7 +104,7 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-      return np.array(list_of_feature_vectors),bboxes
+      return np.array(list_of_feature_vectors),bounding_boxes
 
 
     def __get_gradients(self, array):
@@ -125,3 +139,21 @@ class ModelEvaluator:
             bboxes.append(bounding_boxes[counter])
             counter= counter + 1
         return np.array(bboxes)
+
+    def __evaluate_detection(self, frame_ground_truth, bbox):
+        """
+        Return true if a single detected pixel is also marked as ground truth, false otherwise
+        :param frame_ground_truth: frame groun truth matrix (0 marked as non detected pixels, detected pixels are marked with 1)
+        :param bbox: the detected bbox
+        :return: bool
+        """
+        c1 = int(bbox[0])
+        l1 = int(bbox[1])
+        c2 = int(bbox[2])
+        l2 = int(bbox[3])
+        for i in range (l1,l2):
+            for j in range(c1,c2):
+                if frame_ground_truth[i][j] == 1:
+                    return True
+        return False
+
