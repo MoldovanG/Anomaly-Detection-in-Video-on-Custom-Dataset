@@ -5,11 +5,10 @@ import mxnet as mx
 import numpy as np
 import scipy
 
-from gluoncv import  utils,data
+from gluoncv import utils,data
 from training.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
 from training.ObjectDetector import ObjectDetector
 from matplotlib import pyplot as plt
-
 
 class ModelEvaluator:
 
@@ -17,24 +16,23 @@ class ModelEvaluator:
         self.trainer_stage2 = trainer_stage2
         self.dataset_directory_path = dataset_directory_path
         self.ground_truth_directory = ground_truth_directory
-
+        self.true_positives = []
+        self.false_positives = []
+        self.num_gt_detections = 0
 
     def evaluate_dataset(self):
         for video in os.listdir(self.dataset_directory_path):
-            if video == "08.avi":
-                video_path = os.path.join(self.dataset_directory_path,video)
-                video = cv2.VideoCapture(video_path)
-                self.evaluate_video(video)
+            video_number = int(video.split(".")[0])
+            video_path = os.path.join(self.dataset_directory_path,video)
+            video = cv2.VideoCapture(video_path)
+            self.__evaluate_video(video, video_number)
 
 
-
-    def evaluate_video(self, video):
+    def __evaluate_video(self, video, video_number):
         frames = []
         counter = 1
         print("Processing video starts ...")
-        ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,"8_label.mat")).get('volLabel')
-        number_of_detections = 0
-        number_of_correct_detections = 0
+        ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
         while True:
             ret, frame = video.read()
             if ret == 0:
@@ -45,9 +43,9 @@ class ModelEvaluator:
             frames.append(frame)
             counter = counter + 1
 
-        total_feature_vectors = []
         for i in range(3, len(frames) - 3):
             frame_ground_truth = ground_truth_detections[0][i]
+            self.num_gt_detections = self.num_gt_detections + self.__count_detection_boxes(frame_ground_truth)
             frame = frames[i]
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
@@ -62,23 +60,25 @@ class ModelEvaluator:
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
                 c1,l1,c2,l2 = bounding_boxes[idx]
-                c1 = int(c1/ratio2)
-                c2 = int(c2/ratio2)
-                l1 = int(l1/ratio1)
-                l2 = int(l2/ratio2)
+                c1 = int(c1/ratio2)-1
+                c2 = int(c2/ratio2)-1
+                l1 = int(l1/ratio1)-1
+                l2 = int(l2/ratio2)-1
                 if score == 0:
-                    number_of_detections = number_of_detections + 1
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
                     if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
-                        number_of_correct_detections = number_of_correct_detections + 1
+                        self.true_positives.append(1)
+                        self.false_positives.append(0)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
                     else:
+                        self.true_positives.append(0)
+                        self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
-            cv2.imshow("frame", copy_frame)
-            cv2.waitKey(0)
-        print("Accuraccy is :", str(number_of_correct_detections* (100/number_of_detections)),"%")
+            # cv2.imshow("frame", copy_frame)
+            # cv2.waitKey(0)
+
 
     def __get_feature_vectors_and_bboxes(self, frame, frame_d3, frame_p3):
       """
@@ -106,6 +106,16 @@ class ModelEvaluator:
           list_of_feature_vectors.append(feature_vector)
       return np.array(list_of_feature_vectors),bounding_boxes
 
+    def __compute_average_precision(self, rec, prec):
+        # functie adaptata din 2010 Pascal VOC development kit
+        m_rec = np.concatenate(([0], rec, [1]))
+        m_pre = np.concatenate(([0], prec, [0]))
+        for i in range(len(m_pre) - 1, -1, 1):
+            m_pre[i] = max(m_pre[i], m_pre[i + 1])
+        m_rec = np.array(m_rec)
+        i = np.where(m_rec[1:] != m_rec[:-1])[0] + 1
+        average_precision = np.sum((m_rec[i] - m_rec[i - 1]) * m_pre[i])
+        return average_precision
 
     def __get_gradients(self, array):
         transformed = []
@@ -156,4 +166,52 @@ class ModelEvaluator:
                 if frame_ground_truth[i][j] == 1:
                     return True
         return False
+
+    def __count_detection_boxes(self, frame_ground_truth):
+        counter = 0
+        copy_frame = np.copy(frame_ground_truth)
+        for i in range(copy_frame.shape[0]):
+            for j in range(copy_frame.shape[1]):
+                if copy_frame[i][j] == 1:
+                    counter = counter + 1
+                    self.__fill(copy_frame, i, j, 0)
+        return counter
+
+    def __fill(self, copy_frame, i, j, value):
+        dl = [-1,1,0,0]
+        dc = [0,0,1,-1]
+        l= i
+        c= j
+        while True:
+            ok = 0
+            old_value = copy_frame[l][c]
+            copy_frame[l][c] = value
+            for k in range(len(dl)):
+                di = l + dl[k]
+                dj = c + dc[k]
+                if 0 <= di < copy_frame.shape[0] and 0 <= dj < copy_frame.shape[1]:
+                    if copy_frame[di][dj] == old_value:
+                        l = di
+                        c = dj
+                        ok = 1
+                        break
+            if ok == 0:
+                break;
+    def show_average_precision(self):
+        cum_false_positive = np.cumsum(np.array(self.false_positives))
+        cum_true_positive = np.cumsum(np.array(self.true_positives))
+        rec = cum_true_positive / self.num_gt_detections
+        prec = cum_true_positive / (cum_true_positive + cum_false_positive)
+        average_precision = self.__compute_average_precision(rec, prec)
+        plt.plot(rec, prec, '-')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Average precision %.3f' % average_precision)
+        plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
+        plt.show()
+        print("Accuraccy is :",
+              str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")
+        print("Num of gt_detections:", str(self.num_gt_detections))
+
+
 
