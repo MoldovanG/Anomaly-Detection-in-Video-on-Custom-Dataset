@@ -3,8 +3,56 @@
   <component name="ChangeListManager">
     <list default="true" id="367762fb-c791-4bc0-ac3c-1ad1e14253b3" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/ModelEvaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing/ModelEvaluator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testing/playground3.py" beforeDir="false" afterPath="$PROJECT_DIR$/testing/playground3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol01.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol02.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol03.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol04.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol05.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol06.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol07.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol08.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol09.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol10.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol11.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol12.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol13.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol14.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol15.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol16.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol17.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol18.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol19.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol20.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/testing_vol/vol21.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol01.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol02.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol03.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol04.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol05.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol06.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol07.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol08.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol09.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol10.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol11.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol12.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol13.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol14.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol15.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Avenue Dataset/training_vol/vol16.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/train.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/ModelEvaluator.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/evaluation/ModelEvaluator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/mattest.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/evaluation/mattest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing/playground3.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/evaluation/playground3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/AutoEncoderModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/utils/AutoEncoderModel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/DataSetTrainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage1_autoencoders/DataSetTrainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/DataSetTrainer_Stage2.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage2_clustering_and_svms/DataSetTrainer_Stage2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/ObjectDetector.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/utils/ObjectDetector.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/VideoProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage1_autoencoders/VideoProcessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/VideoProcessor_Stage2.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage2_clustering_and_svms/VideoProcessor_Stage2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/playground.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage1_autoencoders/playground.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/playground2.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage2_clustering_and_svms/playground2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/training/stage1_autoencoders/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,12 +83,15 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/code/training/utils" />
+      <recent name="$PROJECT_DIR$/code/training/stage1-autoencoders" />
+      <recent name="$PROJECT_DIR$/code/training/stage2-clustering-and-svms" />
+      <recent name="$PROJECT_DIR$/code" />
+      <recent name="$PROJECT_DIR$/testing" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/Avenue Dataset/training_videos_small" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/testing" />
-      <recent name="$PROJECT_DIR$/training" />
     </key>
   </component>
   <component name="RunManager" selected="Python.playground3">
@@ -189,56 +240,60 @@
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="689" y="357" width="598" height="390" key="#com.intellij.fileTypes.FileTypeChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1582993721058" />
-    <state width="1830" height="260" key="GridCell.Tab.0.bottom" timestamp="1583089441650">
+    <state x="801" y="271" width="374" height="562" key="#com.intellij.ide.util.MemberChooser" timestamp="1583137161020">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="801" y="271" width="374" height="562" key="#com.intellij.ide.util.MemberChooser/67.27.1853.1053@67.27.1853.1053" timestamp="1583137161020" />
+    <state width="1830" height="344" key="GridCell.Tab.0.bottom" timestamp="1583091707440">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.bottom/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="260" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1583089441650" />
-    <state width="1830" height="260" key="GridCell.Tab.0.center" timestamp="1583089441649">
+    <state width="1830" height="344" key="GridCell.Tab.0.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707440" />
+    <state width="1830" height="344" key="GridCell.Tab.0.center" timestamp="1583091707439">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.center/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="260" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1583089441649" />
-    <state width="1830" height="260" key="GridCell.Tab.0.left" timestamp="1583089441649">
+    <state width="1830" height="344" key="GridCell.Tab.0.center/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707439" />
+    <state width="1830" height="344" key="GridCell.Tab.0.left" timestamp="1583091707439">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.left/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="260" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1583089441649" />
-    <state width="1830" height="260" key="GridCell.Tab.0.right" timestamp="1583089441649">
+    <state width="1830" height="344" key="GridCell.Tab.0.left/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707439" />
+    <state width="1830" height="344" key="GridCell.Tab.0.right" timestamp="1583091707439">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.0.right/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="260" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1583089441649" />
-    <state width="1830" height="344" key="GridCell.Tab.1.bottom" timestamp="1583086354282">
+    <state width="1830" height="344" key="GridCell.Tab.0.right/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707439" />
+    <state width="1830" height="344" key="GridCell.Tab.1.bottom" timestamp="1583091707441">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.1.bottom/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="344" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1583086354282" />
-    <state width="1830" height="344" key="GridCell.Tab.1.center" timestamp="1583086354281">
+    <state width="1830" height="344" key="GridCell.Tab.1.bottom/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707441" />
+    <state width="1830" height="344" key="GridCell.Tab.1.center" timestamp="1583091707440">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.1.center/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="344" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1583086354281" />
-    <state width="1830" height="344" key="GridCell.Tab.1.left" timestamp="1583086354281">
+    <state width="1830" height="344" key="GridCell.Tab.1.center/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707440" />
+    <state width="1830" height="344" key="GridCell.Tab.1.left" timestamp="1583091707440">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.1.left/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="344" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1583086354281" />
-    <state width="1830" height="344" key="GridCell.Tab.1.right" timestamp="1583086354282">
+    <state width="1830" height="344" key="GridCell.Tab.1.left/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707440" />
+    <state width="1830" height="344" key="GridCell.Tab.1.right" timestamp="1583091707440">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state width="1313" height="271" key="GridCell.Tab.1.right/0.0.1333.849@0.0.1333.849" timestamp="1582536357367" />
-    <state width="1830" height="344" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1583086354282" />
+    <state width="1830" height="344" key="GridCell.Tab.1.right/67.27.1853.1053@67.27.1853.1053" timestamp="1583091707440" />
     <state x="313" y="113" key="SettingsEditor" timestamp="1582710012378">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="177" y="69" key="SettingsEditor/0.0.1333.849@0.0.1333.849" timestamp="1582532817028" />
     <state x="313" y="113" key="SettingsEditor/67.27.1853.1053@67.27.1853.1053" timestamp="1582710012378" />
-    <state x="576" y="338" key="com.intellij.ide.util.TipDialog" timestamp="1583085651651">
+    <state x="576" y="338" key="com.intellij.ide.util.TipDialog" timestamp="1583134763226">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
     <state x="366" y="251" key="com.intellij.ide.util.TipDialog/0.0.1333.849@0.0.1333.849" timestamp="1582382078542" />
-    <state x="576" y="338" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1583085651651" />
+    <state x="576" y="338" key="com.intellij.ide.util.TipDialog/67.27.1853.1053@67.27.1853.1053" timestamp="1583134763226" />
     <state x="641" y="119" width="704" height="867" key="find.popup" timestamp="1582719605683">
       <screen x="67" y="27" width="1853" height="1053" />
     </state>
