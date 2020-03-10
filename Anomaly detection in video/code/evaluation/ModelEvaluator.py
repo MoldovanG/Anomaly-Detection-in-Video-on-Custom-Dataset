@@ -5,6 +5,7 @@ import mxnet as mx
 import numpy as np
 import scipy
 
+from scipy.ndimage import gaussian_filter
 from gluoncv import data
 from code.training.stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
 from code.training.utils.ObjectDetector import ObjectDetector
@@ -30,6 +31,7 @@ class ModelEvaluator:
 
     def __evaluate_video(self, video, video_number):
         frames = []
+        frame_scores = []
         counter = 1
         print("Processing video starts ...")
         ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
@@ -46,10 +48,12 @@ class ModelEvaluator:
         for i in range(3, len(frames) - 3):
             frame_ground_truth = ground_truth_detections[0][i]
             self.num_gt_detections = self.num_gt_detections + self.__count_detection_boxes(frame_ground_truth)
+            frame_score = -9999999999
             frame = frames[i]
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
             feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
+            feature_vectors = self.trainer_stage2.normalize_feature_vectors(feature_vectors)
             print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
             printable_frame = img
@@ -59,12 +63,15 @@ class ModelEvaluator:
             print(copy_frame.shape)
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
+                if score > frame_score:
+                    frame_score = score
                 c1,l1,c2,l2 = bounding_boxes[idx]
                 c1 = int(c1/ratio2)-1
                 c2 = int(c2/ratio2)-1
                 l1 = int(l1/ratio1)-1
                 l2 = int(l2/ratio2)-1
                 if score == 0:
+                    abnormal_frame = True
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
@@ -76,8 +83,21 @@ class ModelEvaluator:
                         self.true_positives.append(0)
                         self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
+            frame_scores.append(frame_score)
+            # if abnormal_frame == gt:
+            #     self.true_positives.append(1)
+            #     self.false_positives.append(0)
+            # else:
+            #     self.true_positives.append(0)
+            #     self.false_positives.append(1)
+            print(frame_score)
             # cv2.imshow("frame", copy_frame)
             # cv2.waitKey(0)
+        frame_scores = np.array(frame_scores)
+        frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
+        frame_scores = gaussian_filter(frame_scores,sigma = 1)
+        plt.plot(frame_scores)
+        plt.show()
 
 
     def __get_feature_vectors_and_bboxes(self, frame, frame_d3, frame_p3):
@@ -104,6 +124,16 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
+          # plt.figure()
+          # plt.imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          # plt.show()
+          # plt.figure()
+          # plt.imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # plt.show()
+          # plt.figure()
+          # plt.imshow(gradients_d3[i]*255, cmap="gray")
+          # plt.show()
+
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __compute_average_precision(self, rec, prec):
@@ -197,6 +227,7 @@ class ModelEvaluator:
                         break
             if ok == 0:
                 break;
+
     def show_average_precision(self):
         cum_false_positive = np.cumsum(np.array(self.false_positives))
         cum_true_positive = np.cumsum(np.array(self.true_positives))
@@ -207,7 +238,7 @@ class ModelEvaluator:
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Average precision %.3f' % average_precision)
-        plt.savefig(os.path.join("/pictures", 'precizie_medie.png'))
+        plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
         plt.show()
         print("Accuraccy is :",
               str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")

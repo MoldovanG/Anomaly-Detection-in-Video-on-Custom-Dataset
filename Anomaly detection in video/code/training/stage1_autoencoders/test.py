@@ -4,9 +4,10 @@ import numpy as np
 from gluoncv import utils
 from matplotlib import pyplot as plt
 
+from code.training.utils.AutoEncoderModel import AutoEncoderModel
 from code.training.utils.ObjectDetector import ObjectDetector
 
-video_path = "/Avenue Dataset/training_videos_small/01.avi"
+video_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/training_videos_small/01.avi"
 video = cv2.VideoCapture(video_path)
 
 ret,frame = video.read()
@@ -17,5 +18,5 @@ frame = frame.astype(np.uint8)
 objectDetector = ObjectDetector(frame)
 
 ax = utils.viz.plot_bbox(objectDetector.img_transformed_image, objectDetector.bounding_boxes, objectDetector.scores)
-
+cropped_detections = objectDetector.get_object_detections()
 plt.show()
