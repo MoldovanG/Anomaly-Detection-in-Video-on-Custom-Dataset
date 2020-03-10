@@ -1,5 +1,4 @@
 import os
-
 import cv2
 import mxnet as mx
 import numpy as np
@@ -8,6 +7,7 @@ import scipy
 from scipy.ndimage import gaussian_filter
 from gluoncv import data
 from code.training.stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
+from code.training.utils.GradientCalculator import GradientCalculator
 from code.training.utils.ObjectDetector import ObjectDetector
 from matplotlib import pyplot as plt
 
@@ -60,7 +60,6 @@ class ModelEvaluator:
             ratio1 = printable_frame.shape[0]/frame.shape[0]
             ratio2 = printable_frame.shape[1]/frame.shape[1]
             copy_frame = frame.asnumpy()
-            print(copy_frame.shape)
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
                 if score > frame_score:
@@ -71,7 +70,6 @@ class ModelEvaluator:
                 l1 = int(l1/ratio1)-1
                 l2 = int(l2/ratio2)-1
                 if score == 0:
-                    abnormal_frame = True
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
@@ -84,15 +82,8 @@ class ModelEvaluator:
                         self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
             frame_scores.append(frame_score)
-            # if abnormal_frame == gt:
-            #     self.true_positives.append(1)
-            #     self.false_positives.append(0)
-            # else:
-            #     self.true_positives.append(0)
-            #     self.false_positives.append(1)
-            print(frame_score)
-            # cv2.imshow("frame", copy_frame)
-            # cv2.waitKey(0)
+            cv2.imshow("frame", copy_frame)
+            cv2.waitKey(0)
         frame_scores = np.array(frame_scores)
         frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
         frame_scores = gaussian_filter(frame_scores,sigma = 1)
@@ -114,8 +105,9 @@ class ModelEvaluator:
       bounding_boxes = object_detector.bounding_boxes
 
       cropped_detections, cropped_d3, cropped_p3  = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
-      gradients_d3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_d3))
-      gradients_p3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_p3))
+      gradient_calculator = GradientCalculator()
+      gradients_d3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient(cropped_d3))
+      gradients_p3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)
       list_of_feature_vectors = []
       for i in range(cropped_detections.shape[0]):
@@ -124,47 +116,14 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          # plt.figure()
-          # plt.imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          # plt.show()
-          # plt.figure()
-          # plt.imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # plt.show()
-          # plt.figure()
-          # plt.imshow(gradients_d3[i]*255, cmap="gray")
-          # plt.show()
+
+          fig, axs = plt.subplots(1, 3)
+          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          axs[2].imshow(gradients_d3[i]*255, cmap="gray")
+          plt.show()
 
       return np.array(list_of_feature_vectors),bounding_boxes
-
-    def __compute_average_precision(self, rec, prec):
-        # functie adaptata din 2010 Pascal VOC development kit
-        m_rec = np.concatenate(([0], rec, [1]))
-        m_pre = np.concatenate(([0], prec, [0]))
-        for i in range(len(m_pre) - 1, -1, 1):
-            m_pre[i] = max(m_pre[i], m_pre[i + 1])
-        m_rec = np.array(m_rec)
-        i = np.where(m_rec[1:] != m_rec[:-1])[0] + 1
-        average_precision = np.sum((m_rec[i] - m_rec[i - 1]) * m_pre[i])
-        return average_precision
-
-    def __get_gradients(self, array):
-        transformed = []
-        for image in array:
-            gradient = self.__get_gradient(image)
-            transformed.append(gradient)
-        return np.array(transformed)
-
-    def __get_gradient(self, image):
-        # Get x-gradient in "sx"
-        sx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
-        # Get y-gradient in "sy"
-        sy = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
-        # Get square root of sum of squares
-        sobel = np.hypot(sx, sy)
-        sobel = sobel.astype(np.float32)
-        sobel = cv2.normalize(src=sobel, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX,
-                              dtype=cv2.CV_8U)
-        return sobel
 
     def __prepare_data_for_CNN(self, array):
         transformed = []
@@ -228,21 +187,6 @@ class ModelEvaluator:
             if ok == 0:
                 break;
 
-    def show_average_precision(self):
-        cum_false_positive = np.cumsum(np.array(self.false_positives))
-        cum_true_positive = np.cumsum(np.array(self.true_positives))
-        rec = cum_true_positive / self.num_gt_detections
-        prec = cum_true_positive / (cum_true_positive + cum_false_positive)
-        average_precision = self.__compute_average_precision(rec, prec)
-        plt.plot(rec, prec, '-')
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.title('Average precision %.3f' % average_precision)
-        plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
-        plt.show()
-        print("Accuraccy is :",
-              str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")
-        print("Num of gt_detections:", str(self.num_gt_detections))
 
 
 
