@@ -84,6 +84,7 @@ class ModelEvaluator:
             frame_scores.append(frame_score)
             # cv2.imshow("frame", copy_frame)
             # cv2.waitKey(0)
+
         frame_scores = np.array(frame_scores)
         print(frame_scores)
         frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
@@ -119,13 +120,11 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-
           # fig, axs = plt.subplots(1, 3)
           # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
           # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
           # axs[2].imshow(gradients_d3[i]*255, cmap="gray")
           # plt.show()
-
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __prepare_data_for_CNN(self, array):
