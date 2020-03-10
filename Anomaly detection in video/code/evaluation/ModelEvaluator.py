@@ -48,7 +48,7 @@ class ModelEvaluator:
         for i in range(3, len(frames) - 3):
             frame_ground_truth = ground_truth_detections[0][i]
             self.num_gt_detections = self.num_gt_detections + self.__count_detection_boxes(frame_ground_truth)
-            frame_score = -9999999999
+            frame_score = 1
             frame = frames[i]
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
@@ -62,7 +62,7 @@ class ModelEvaluator:
             copy_frame = frame.asnumpy()
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
-                if score > frame_score:
+                if score < frame_score:
                     frame_score = score
                 c1,l1,c2,l2 = bounding_boxes[idx]
                 c1 = int(c1/ratio2)-1
@@ -82,11 +82,14 @@ class ModelEvaluator:
                         self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
             frame_scores.append(frame_score)
-            cv2.imshow("frame", copy_frame)
-            cv2.waitKey(0)
+            # cv2.imshow("frame", copy_frame)
+            # cv2.waitKey(0)
         frame_scores = np.array(frame_scores)
+        print(frame_scores)
         frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
+        print(frame_scores)
         frame_scores = gaussian_filter(frame_scores,sigma = 1)
+        print(frame_scores)
         plt.plot(frame_scores)
         plt.show()
 
@@ -117,11 +120,11 @@ class ModelEvaluator:
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
 
-          fig, axs = plt.subplots(1, 3)
-          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          axs[2].imshow(gradients_d3[i]*255, cmap="gray")
-          plt.show()
+          # fig, axs = plt.subplots(1, 3)
+          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # axs[2].imshow(gradients_d3[i]*255, cmap="gray")
+          # plt.show()
 
       return np.array(list_of_feature_vectors),bounding_boxes
 
