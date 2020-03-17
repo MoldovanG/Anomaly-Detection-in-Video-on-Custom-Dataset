@@ -18,3 +18,9 @@ class GradientCalculator:
         sobel = cv2.normalize(src=sobel, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX,
                               dtype=cv2.CV_8U)
         return sobel
+    def calculate_gradient_bulk(self,images):
+        gradients = []
+        for image in images:
+            gradient = self.calculate_gradient(image)
+            gradients.append(gradient)
+        return np.array(gradients)

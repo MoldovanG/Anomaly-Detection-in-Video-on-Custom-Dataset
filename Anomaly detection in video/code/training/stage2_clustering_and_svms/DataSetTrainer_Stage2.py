@@ -97,6 +97,6 @@ class DataSetTrainer_Stage2:
     def normalize_feature_vectors(self, feature_vectors):
         normalized = []
         for feature_vector in feature_vectors:
-            norm = (feature_vector-min(feature_vector))/(max(feature_vector)-min(feature_vector))
+            norm = feature_vector / np.linalg.norm(feature_vector)
             normalized.append(norm)
         return np.array(normalized)

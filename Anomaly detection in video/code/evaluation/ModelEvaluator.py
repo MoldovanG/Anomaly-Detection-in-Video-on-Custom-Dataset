@@ -3,6 +3,7 @@ import cv2
 import mxnet as mx
 import numpy as np
 import scipy
+from random import randint
 
 from scipy.ndimage import gaussian_filter
 from gluoncv import data
@@ -82,6 +83,7 @@ class ModelEvaluator:
                         self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
             frame_scores.append(frame_score)
+            #
             # cv2.imshow("frame", copy_frame)
             # cv2.waitKey(0)
 
@@ -108,10 +110,10 @@ class ModelEvaluator:
       object_detector = ObjectDetector(frame)
       bounding_boxes = object_detector.bounding_boxes
 
-      cropped_detections, cropped_d3, cropped_p3  = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
+      cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
       gradient_calculator = GradientCalculator()
-      gradients_d3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient(cropped_d3))
-      gradients_p3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient(cropped_p3))
+      gradients_d3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient_bulk(cropped_d3))
+      gradients_p3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient_bulk(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)
       list_of_feature_vectors = []
       for i in range(cropped_detections.shape[0]):
@@ -120,11 +122,21 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          # fig, axs = plt.subplots(1, 3)
-          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # axs[2].imshow(gradients_d3[i]*255, cmap="gray")
-          # plt.show()
+          fig, axs = plt.subplots(1, 3)
+          random = randint(0,99999999)
+          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
+          plt.close(fig)
+          fig, axs = plt.subplots(1, 3)
+          axs[0].imshow(cropped_detections[i]*255, cmap="gray")
+          axs[1].imshow(gradients_d3[i]*255, cmap="gray")
+          axs[2].imshow(gradients_p3[i]*255, cmap="gray")
+          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
+                                   'feature_vectors' + str(random) + '.png'))
+          plt.close(fig)
+
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __prepare_data_for_CNN(self, array):
