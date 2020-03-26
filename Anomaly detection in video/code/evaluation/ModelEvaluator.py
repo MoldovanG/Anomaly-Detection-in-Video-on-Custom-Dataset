@@ -47,9 +47,15 @@ class ModelEvaluator:
             counter = counter + 1
 
         for i in range(3, len(frames) - 3):
+            gt_frame_abnormality = False
             frame_ground_truth = ground_truth_detections[0][i]
-            self.num_gt_detections = self.num_gt_detections + self.__count_detection_boxes(frame_ground_truth)
-            frame_score = 1
+            detection_boxes_counter = self.__count_detection_boxes(frame_ground_truth)
+            # self.num_gt_detections = self.num_gt_detections + detection_boxes_counter
+            if detection_boxes_counter > 0:
+                gt_frame_abnormality = True
+                self.num_gt_detections = self.num_gt_detections + 1
+
+            frame_score = -1
             frame = frames[i]
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
@@ -57,39 +63,57 @@ class ModelEvaluator:
             feature_vectors = self.trainer_stage2.normalize_feature_vectors(feature_vectors)
             print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
-            printable_frame = img
-            ratio1 = printable_frame.shape[0]/frame.shape[0]
-            ratio2 = printable_frame.shape[1]/frame.shape[1]
+            ratio1 = img.shape[0]/frame.shape[0]
+            ratio2 = img.shape[1]/frame.shape[1]
             copy_frame = frame.asnumpy()
+            print("Shape of the gt frame and the printable frame:",img.shape, frame_ground_truth.shape)
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
-                if score < frame_score:
+                if score > frame_score:
                     frame_score = score
                 c1,l1,c2,l2 = bounding_boxes[idx]
+                if score > 0:
+                    top_corner = (c1, l1)
+                    bottom_corner = (c2, l2)
+                    print("Before applying ratio: ",top_corner, " ; ", bottom_corner, " score :: ", score)
                 c1 = int(c1/ratio2)-1
                 c2 = int(c2/ratio2)-1
                 l1 = int(l1/ratio1)-1
                 l2 = int(l2/ratio2)-1
-                if score == 0:
+                if score > 0:
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
                     if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
-                        self.true_positives.append(1)
-                        self.false_positives.append(0)
+                        # self.true_positives.append(1)
+                        # self.false_positives.append(0)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
                     else:
-                        self.true_positives.append(0)
-                        self.false_positives.append(1)
+                        # self.true_positives.append(0)
+                        # self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
+            predicted_frame_abnormality = False
+            if score > 0:
+                predicted_frame_abnormality = True
+
+            if predicted_frame_abnormality == gt_frame_abnormality and predicted_frame_abnormality is True:
+                self.true_positives.append(1)
+                self.false_positives.append(0)
+            else:
+                if predicted_frame_abnormality != gt_frame_abnormality and predicted_frame_abnormality is True:
+                    self.true_positives.append(0)
+                    self.false_positives.append(1)
+            if frame_score < 0:
+                frame_score = 0
             frame_scores.append(frame_score)
-            #
             # cv2.imshow("frame", copy_frame)
             # cv2.waitKey(0)
 
         frame_scores = np.array(frame_scores)
         print(frame_scores)
-        frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
+        plt.plot(frame_scores)
+        plt.show()
+        # frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
         print(frame_scores)
         frame_scores = gaussian_filter(frame_scores,sigma = 1)
         print(frame_scores)
@@ -122,20 +146,20 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          fig, axs = plt.subplots(1, 3)
-          random = randint(0,99999999)
-          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
-          plt.close(fig)
-          fig, axs = plt.subplots(1, 3)
-          axs[0].imshow(cropped_detections[i]*255, cmap="gray")
-          axs[1].imshow(gradients_d3[i]*255, cmap="gray")
-          axs[2].imshow(gradients_p3[i]*255, cmap="gray")
-          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
-                                   'feature_vectors' + str(random) + '.png'))
-          plt.close(fig)
+          # fig, axs = plt.subplots(1, 3)
+          # random = randint(0,99999999)
+          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
+          # plt.close(fig)
+          # fig, axs = plt.subplots(1, 3)
+          # axs[0].imshow(cropped_detections[i]*255, cmap="gray")
+          # axs[1].imshow(gradients_d3[i]*255, cmap="gray")
+          # axs[2].imshow(gradients_p3[i]*255, cmap="gray")
+          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
+          #                          'feature_vectors' + str(random) + '.png'))
+          # plt.close(fig)
 
       return np.array(list_of_feature_vectors),bounding_boxes
 

@@ -37,7 +37,6 @@ class ObjectDetector:
         ----
         A pair of 4 items(c1,l1,c2,l2)describing the top left and bottom right corners of the bounding box
         """
-        # flat_bounding_box = bounding_boxes[index].asnumpy()
         c1 = int(bounding_boxes[index][0])
         l1 = int(bounding_boxes[index][1])
         c2 = int(bounding_boxes[index][2])
@@ -107,6 +106,11 @@ class ObjectDetector:
         new_scores = []
         counter = 0
         while scores[counter] > self.threshold:
+            c1, l1, c2, l2 = self.get_bounding_box_coordinates(bounding_boxes, counter)
+            if c1 < 0 or c2 > self.img_transformed_image.shape[1] or l1 < 0 or l2 > self.img_transformed_image.shape[0]:
+                print("Invalid bounding box:", c1,l1,c2,l2)
+                counter = counter + 1
+                continue
             bboxes.append(bounding_boxes[counter])
             new_scores.append(scores[counter])
             counter = counter + 1

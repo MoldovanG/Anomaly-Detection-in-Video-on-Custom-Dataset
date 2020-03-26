@@ -84,8 +84,8 @@ class DataSetTrainer_Stage2:
         return models
 
     def get_inference_score(self,feature_vector):
-        scores = [model.predict([feature_vector])[0] for model in self.models]
-        return max(scores)
+        scores = [model.decision_function([feature_vector])[0] for model in self.models]
+        return -max(scores)
 
     def __load_models(self):
         models = []
