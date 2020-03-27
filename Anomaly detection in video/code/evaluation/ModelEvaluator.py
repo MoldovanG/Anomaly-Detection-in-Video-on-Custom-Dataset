@@ -21,6 +21,7 @@ class ModelEvaluator:
         self.true_positives = []
         self.false_positives = []
         self.num_gt_detections = 0
+        self.threshold = 3
 
     def evaluate_dataset(self):
         for video in os.listdir(self.dataset_directory_path):
@@ -33,6 +34,7 @@ class ModelEvaluator:
     def __evaluate_video(self, video, video_number):
         frames = []
         frame_scores = []
+        gt_frame_anormalities = []
         counter = 1
         print("Processing video starts ...")
         ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
@@ -50,7 +52,6 @@ class ModelEvaluator:
             gt_frame_abnormality = False
             frame_ground_truth = ground_truth_detections[0][i]
             detection_boxes_counter = self.__count_detection_boxes(frame_ground_truth)
-            # self.num_gt_detections = self.num_gt_detections + detection_boxes_counter
             if detection_boxes_counter > 0:
                 gt_frame_abnormality = True
                 self.num_gt_detections = self.num_gt_detections + 1
@@ -60,41 +61,37 @@ class ModelEvaluator:
             frame_d3 = frames[i - 3]
             frame_p3 = frames[i + 3]
             feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
-            feature_vectors = self.trainer_stage2.normalize_feature_vectors(feature_vectors)
+            if feature_vectors.size > 0:
+                feature_vectors = self.trainer_stage2.drop_the_one_hot_encoding(feature_vectors)
+
             print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
             ratio1 = img.shape[0]/frame.shape[0]
             ratio2 = img.shape[1]/frame.shape[1]
             copy_frame = frame.asnumpy()
-            print("Shape of the gt frame and the printable frame:",img.shape, frame_ground_truth.shape)
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
-                if score > frame_score:
-                    frame_score = score
                 c1,l1,c2,l2 = bounding_boxes[idx]
-                if score > 0:
-                    top_corner = (c1, l1)
-                    bottom_corner = (c2, l2)
-                    print("Before applying ratio: ",top_corner, " ; ", bottom_corner, " score :: ", score)
                 c1 = int(c1/ratio2)-1
                 c2 = int(c2/ratio2)-1
                 l1 = int(l1/ratio1)-1
                 l2 = int(l2/ratio2)-1
-                if score > 0:
+                if score > self.threshold:
+                    if score > frame_score:
+                        frame_score = score
                     top_corner = (c1,l1)
                     bottom_corner = (c2,l2)
                     print(top_corner," ; ",bottom_corner," score :: ",score)
                     if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
-                        # self.true_positives.append(1)
-                        # self.false_positives.append(0)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
                     else:
-                        # self.true_positives.append(0)
-                        # self.false_positives.append(1)
                         cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
             predicted_frame_abnormality = False
-            if score > 0:
+            if frame_score > self.threshold:
                 predicted_frame_abnormality = True
+                gt_frame_anormalities.append(1)
+            else:
+                gt_frame_anormalities.append(0)
 
             if predicted_frame_abnormality == gt_frame_abnormality and predicted_frame_abnormality is True:
                 self.true_positives.append(1)
@@ -103,17 +100,24 @@ class ModelEvaluator:
                 if predicted_frame_abnormality != gt_frame_abnormality and predicted_frame_abnormality is True:
                     self.true_positives.append(0)
                     self.false_positives.append(1)
-            if frame_score < 0:
-                frame_score = 0
+            if frame_score < 3:
+                frame_score = 1
             frame_scores.append(frame_score)
-            # cv2.imshow("frame", copy_frame)
-            # cv2.waitKey(0)
+            cv2.imshow("frame", copy_frame)
+            cv2.waitKey(1000)
+            cv2.destroyAllWindows()
 
         frame_scores = np.array(frame_scores)
+        gt_frame_anormalities = np.array(gt_frame_anormalities)
         print(frame_scores)
-        plt.plot(frame_scores)
+        x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
+        fig, ax = plt.subplots()
+        ax.fill_between(x, gt_frame_anormalities, alpha=0.2)
+        ax.plot(x, frame_scores, '-')
         plt.show()
-        # frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
+        plt.close(fig)
+
+        frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
         print(frame_scores)
         frame_scores = gaussian_filter(frame_scores,sigma = 1)
         print(frame_scores)
@@ -133,7 +137,10 @@ class ModelEvaluator:
       """
       object_detector = ObjectDetector(frame)
       bounding_boxes = object_detector.bounding_boxes
-
+      class_ids = object_detector.class_IDs
+      onehot_class_ids = np.zeros((class_ids.size, 91))
+      if class_ids.size > 0:
+          onehot_class_ids[np.arange(class_ids.size), class_ids] = 1
       cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
       gradient_calculator = GradientCalculator()
       gradients_d3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient_bulk(cropped_d3))
@@ -144,7 +151,7 @@ class ModelEvaluator:
           apperance_features = self.trainer_stage2.autoencoder_images.get_encoded_state(np.resize(cropped_detections[i], (64, 64, 1)))
           motion_features_d3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_d3[i], (64, 64, 1)))
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
-          feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
+          feature_vector = np.concatenate((onehot_class_ids[i], motion_features_d3.flatten(),apperance_features.flatten(), motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
           # fig, axs = plt.subplots(1, 3)
           # random = randint(0,99999999)
@@ -160,7 +167,6 @@ class ModelEvaluator:
           # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
           #                          'feature_vectors' + str(random) + '.png'))
           # plt.close(fig)
-
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __prepare_data_for_CNN(self, array):
@@ -224,6 +230,8 @@ class ModelEvaluator:
                         break
             if ok == 0:
                 break;
+
+
 
 
 

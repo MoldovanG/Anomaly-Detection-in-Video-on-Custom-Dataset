@@ -23,7 +23,7 @@ class ObjectDetector:
         self.threshold = 0.5
         self.x_transformed_image, self.img_transformed_image = data.transforms.presets.ssd.transform_test(image, short=512)
         self.class_IDs, self.scores, self.bounding_boxes = self.net(self.x_transformed_image)
-        self.bounding_boxes,self.scores = self.__clean_bounding_boxes_and_scores(self.bounding_boxes[0].asnumpy(), self.scores[0].asnumpy())
+        self.bounding_boxes,self.scores,self.class_IDs = self.__clean_bounding_boxes_and_scores(self.bounding_boxes[0].asnumpy(), self.scores[0].asnumpy(),self.class_IDs[0].asnumpy())
 
 
     def get_bounding_box_coordinates(self, bounding_boxes, index):
@@ -95,15 +95,17 @@ class ObjectDetector:
 
         return detections,cropped_d3,cropped_p3
 
-    def __clean_bounding_boxes_and_scores(self, bounding_boxes, scores):
+    def __clean_bounding_boxes_and_scores(self, bounding_boxes, scores, class_ids):
         """
         Method used for removing the bounding boxes that have a score under the set threshold
         :param bounding_boxes: bounding_boxes np.array with size(Nx4)
         :param scores: scores np.array with size(Nx1)
+        :param class_ids: class_ids np.array with size(Nx1)
         :return: Trimmed bounding_boxes as np.array, and trimmed scoresas np.array
         """
         bboxes = []
         new_scores = []
+        new_class_ids=[]
         counter = 0
         while scores[counter] > self.threshold:
             c1, l1, c2, l2 = self.get_bounding_box_coordinates(bounding_boxes, counter)
@@ -111,10 +113,11 @@ class ObjectDetector:
                 print("Invalid bounding box:", c1,l1,c2,l2)
                 counter = counter + 1
                 continue
+            new_class_ids.append(int(class_ids[counter]))
             bboxes.append(bounding_boxes[counter])
             new_scores.append(scores[counter])
             counter = counter + 1
-        return np.array(bboxes),np.array(new_scores)
+        return np.array(bboxes),np.array(new_scores),np.array(new_class_ids)
 
 
 

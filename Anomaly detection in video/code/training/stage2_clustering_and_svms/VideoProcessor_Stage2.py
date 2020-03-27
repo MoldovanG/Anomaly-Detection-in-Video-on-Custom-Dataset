@@ -1,3 +1,6 @@
+import os
+from random import randint
+
 import cv2
 import mxnet as mx
 import numpy as np
@@ -5,7 +8,6 @@ import numpy as np
 from code.training.utils.AutoEncoderModel import AutoEncoderModel
 from code.training.utils.GradientCalculator import GradientCalculator
 from code.training.utils.ObjectDetector import ObjectDetector
-
 
 class VideoProcessor_Stage2:
     """
@@ -68,6 +70,13 @@ class VideoProcessor_Stage2:
       object_detector = ObjectDetector(frame)
       cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame_d3,
                                                                                                        frame_p3)
+      class_ids = object_detector.class_IDs
+      # print("Shape of the class ids : ", class_ids.shape)
+      # print("Min and max of tha class ids: ",min(class_ids),max(class_ids))
+      onehot_class_ids = np.zeros((class_ids.size, 91))
+      if class_ids.size > 0:
+          onehot_class_ids[np.arange(class_ids.size), class_ids] = 1
+      # print("Shape of the one hot class ids: ", onehot_class_ids.shape)
       gradients_d3 = self.__prepare_data_for_CNN( self.__get_gradients(cropped_d3))
       gradients_p3 = self.__prepare_data_for_CNN(self.__get_gradients(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)
@@ -77,8 +86,9 @@ class VideoProcessor_Stage2:
           apperance_features = self.__autoencoder_images.get_encoded_state(np.resize(cropped_detections[i], (64, 64, 1)))
           motion_features_d3 = self.__autoencoder_gradients.get_encoded_state(np.resize(gradients_d3[i], (64, 64, 1)))
           motion_features_p3 = self.__autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
-          feature_vector = np.concatenate((apperance_features.flatten(),motion_features_d3.flatten(),motion_features_p3.flatten()))
+          feature_vector = np.concatenate((onehot_class_ids[i],motion_features_d3.flatten(), apperance_features.flatten(), motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
+      # print ("Shape of the generated feature vector:",np.array(list_of_feature_vectors).shape)
       return np.array(list_of_feature_vectors)
 
     def __get_gradients(self, array):

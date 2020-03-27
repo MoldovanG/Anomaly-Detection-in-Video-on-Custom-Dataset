@@ -24,8 +24,8 @@ class DataSetTrainer_Stage2:
         self.autoencoder_images = autoencoder_images
         self.autoencoder_gradients = autoencoder_gradients
         self.__feature_vectors = self.__get_dataset_feature_vectors()
-        print(np.max(self.__feature_vectors[0]), " ", np.min(self.__feature_vectors[0]))
-        self.__feature_vectors = self.normalize_feature_vectors(self.__feature_vectors)
+        self.__feature_vectors = self.drop_the_one_hot_encoding(self.__feature_vectors)
+        print(self.__feature_vectors.shape)
         print(np.max(self.__feature_vectors[0]), " ", np.min(self.__feature_vectors[0]))
         print(self.__feature_vectors.shape)
         self.__cluster_labels = self.__cluster_data(self.__feature_vectors, self.num_clusters)
@@ -42,9 +42,8 @@ class DataSetTrainer_Stage2:
         else:
             return np.load(os.path.join(clustering_savedir,"labels.npy"))
 
-
     def __get_dataset_feature_vectors(self):
-        total_feature_vectors = np.resize([],(0,3072))
+        total_feature_vectors = np.resize([],(0,3163))
         for video_name in os.listdir(self.dataset_directory_path):
             print(video_name)
             name_withouth_extesion = video_name.split(".")[0]
@@ -85,7 +84,7 @@ class DataSetTrainer_Stage2:
 
     def get_inference_score(self,feature_vector):
         scores = [model.decision_function([feature_vector])[0] for model in self.models]
-        return -max(scores)
+        return max(scores)
 
     def __load_models(self):
         models = []
@@ -94,9 +93,5 @@ class DataSetTrainer_Stage2:
             models.append(model)
         return models
 
-    def normalize_feature_vectors(self, feature_vectors):
-        normalized = []
-        for feature_vector in feature_vectors:
-            norm = feature_vector / np.linalg.norm(feature_vector)
-            normalized.append(norm)
-        return np.array(normalized)
+    def drop_the_one_hot_encoding(self, feature_vectors):
+        return  feature_vectors[:,91:]
