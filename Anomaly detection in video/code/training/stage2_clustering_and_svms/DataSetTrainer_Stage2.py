@@ -36,9 +36,16 @@ class DataSetTrainer_Stage2:
         clustering_savedir = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/clustering_labels"
         if not os.path.exists(clustering_savedir):
             os.mkdir(clustering_savedir)
-            kmeans = KMeans(n_clusters=num_clusters, random_state=0).fit(feature_vectors)
-            np.save(os.path.join(clustering_savedir,"labels.npy"),kmeans.labels_)
-            return kmeans.labels_
+            kmeans = KMeans(n_clusters=num_clusters).fit(feature_vectors)
+            best_kmeans = kmeans
+            for i in range (4):
+                print("Working on clustering number : " + str(i))
+                kmeans = KMeans(n_clusters=num_clusters).fit(feature_vectors)
+                if kmeans.inertia_ < best_kmeans.inertia_:
+                    print("Am gasit o clusterizare mai buna")
+                    best_kmeans = kmeans
+            np.save(os.path.join(clustering_savedir,"labels.npy"),best_kmeans.labels_)
+            return best_kmeans.labels_
         else:
             return np.load(os.path.join(clustering_savedir,"labels.npy"))
 

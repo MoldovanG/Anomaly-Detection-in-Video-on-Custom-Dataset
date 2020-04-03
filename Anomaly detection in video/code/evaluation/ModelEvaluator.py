@@ -30,7 +30,6 @@ class ModelEvaluator:
             video = cv2.VideoCapture(video_path)
             self.__evaluate_video(video, video_number)
 
-
     def __evaluate_video(self, video, video_number):
         frames = []
         frame_scores = []
@@ -55,6 +54,9 @@ class ModelEvaluator:
             if detection_boxes_counter > 0:
                 gt_frame_abnormality = True
                 self.num_gt_detections = self.num_gt_detections + 1
+                gt_frame_anormalities.append(2)
+            else:
+                gt_frame_anormalities.append(0)
 
             frame_score = -1
             frame = frames[i]
@@ -63,7 +65,6 @@ class ModelEvaluator:
             feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
             if feature_vectors.size > 0:
                 feature_vectors = self.trainer_stage2.drop_the_one_hot_encoding(feature_vectors)
-
             print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
             ratio1 = img.shape[0]/frame.shape[0]
@@ -89,9 +90,6 @@ class ModelEvaluator:
             predicted_frame_abnormality = False
             if frame_score > self.threshold:
                 predicted_frame_abnormality = True
-                gt_frame_anormalities.append(1)
-            else:
-                gt_frame_anormalities.append(0)
 
             if predicted_frame_abnormality == gt_frame_abnormality and predicted_frame_abnormality is True:
                 self.true_positives.append(1)
@@ -100,8 +98,8 @@ class ModelEvaluator:
                 if predicted_frame_abnormality != gt_frame_abnormality and predicted_frame_abnormality is True:
                     self.true_positives.append(0)
                     self.false_positives.append(1)
-            if frame_score < 3:
-                frame_score = 1
+            if frame_score < self.threshold:
+                frame_score = 0
             frame_scores.append(frame_score)
             cv2.imshow("frame", copy_frame)
             cv2.waitKey(1000)
@@ -112,18 +110,21 @@ class ModelEvaluator:
         print(frame_scores)
         x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
         fig, ax = plt.subplots()
+        ax.plot(x,gt_frame_anormalities, color="red",label = "ground truth")
         ax.fill_between(x, gt_frame_anormalities, alpha=0.2)
-        ax.plot(x, frame_scores, '-')
+        ax.plot(x,frame_scores, color="blue",label = "frame_scores")
         plt.show()
         plt.close(fig)
-
+        print(gt_frame_anormalities)
         frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
-        print(frame_scores)
-        frame_scores = gaussian_filter(frame_scores,sigma = 1)
-        print(frame_scores)
-        plt.plot(frame_scores)
+        frame_scores = gaussian_filter(frame_scores,sigma = 6)
+        x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
+        fig, ax = plt.subplots()
+        ax.plot(x, gt_frame_anormalities, color="red", label="ground truth")
+        ax.fill_between(x, gt_frame_anormalities, alpha=0.2)
+        ax.plot(x, frame_scores, color="blue", label="frame_scores")
         plt.show()
-
+        plt.close(fig)
 
     def __get_feature_vectors_and_bboxes(self, frame, frame_d3, frame_p3):
       """
@@ -153,20 +154,20 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((onehot_class_ids[i], motion_features_d3.flatten(),apperance_features.flatten(), motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          # fig, axs = plt.subplots(1, 3)
-          # random = randint(0,99999999)
-          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
-          # plt.close(fig)
-          # fig, axs = plt.subplots(1, 3)
-          # axs[0].imshow(cropped_detections[i]*255, cmap="gray")
-          # axs[1].imshow(gradients_d3[i]*255, cmap="gray")
-          # axs[2].imshow(gradients_p3[i]*255, cmap="gray")
-          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
-          #                          'feature_vectors' + str(random) + '.png'))
-          # plt.close(fig)
+          fig, axs = plt.subplots(1, 3)
+          random = randint(0,99999999)
+          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
+          plt.close(fig)
+          fig, axs = plt.subplots(1, 3)
+          axs[0].imshow(cropped_detections[i]*255, cmap="gray")
+          axs[1].imshow(gradients_d3[i]*255, cmap="gray")
+          axs[2].imshow(gradients_p3[i]*255, cmap="gray")
+          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
+                                   'feature_vectors' + str(random) + '.png'))
+          plt.close(fig)
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __prepare_data_for_CNN(self, array):

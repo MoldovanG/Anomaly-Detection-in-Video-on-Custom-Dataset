@@ -68,7 +68,7 @@ class AutoEncoderModel:
             os.makedirs(self.checkpoint_dir)
             checkpoint_callback = ModelCheckpoint(filepath=self.checkpoint_dir + '/weights.hdf5', verbose=1,
                                                   save_best_only=True)
-            early_stopping_monitor = EarlyStopping(patience=4)
+            early_stopping_monitor = EarlyStopping(patience=2)
             data_train, data_test, gt_train, gt_test = train_test_split(input_images, input_images, test_size=0.20,
                                                                         random_state=42)
             self.autoencoder.fit(data_train, data_train,
