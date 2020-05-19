@@ -32,6 +32,7 @@ class DataSetTrainer_Stage2:
         self.__generate_models()
         self.models = self.__load_models()
 
+
     def __cluster_data(self, feature_vectors, num_clusters):
         clustering_savedir = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/clustering_labels"
         if not os.path.exists(clustering_savedir):

@@ -4,7 +4,7 @@ import numpy as np
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
 import matplotlib.pyplot as plt

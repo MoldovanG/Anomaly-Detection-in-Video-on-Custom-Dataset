@@ -9,9 +9,9 @@ class GradientCalculator:
 
     def calculate_gradient(self,image):
         # Get x-gradient in "sx"
-        sx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=5)
+        sx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
         # Get y-gradient in "sy"
-        sy = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=5)
+        sy = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
         # Get square root of sum of squares
         sobel = np.hypot(sx, sy)
         sobel = sobel.astype(np.float32)

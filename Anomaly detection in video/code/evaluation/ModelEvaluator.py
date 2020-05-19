@@ -3,6 +3,7 @@ import cv2
 import mxnet as mx
 import numpy as np
 import scipy
+import time
 from random import randint
 
 from scipy.ndimage import gaussian_filter
@@ -12,6 +13,9 @@ from code.training.utils.GradientCalculator import GradientCalculator
 from code.training.utils.ObjectDetector import ObjectDetector
 from matplotlib import pyplot as plt
 
+from code.training.utils.PrecisionCalculator import PrecisionCalculator
+
+
 class ModelEvaluator:
 
     def __init__(self,trainer_stage2 : DataSetTrainer_Stage2, dataset_directory_path,ground_truth_directory):
@@ -20,8 +24,10 @@ class ModelEvaluator:
         self.ground_truth_directory = ground_truth_directory
         self.true_positives = []
         self.false_positives = []
+        self.frame_scores = []
+        self.gt_frame_anormalities = []
         self.num_gt_detections = 0
-        self.threshold = 3
+        self.threshold = 0
 
     def evaluate_dataset(self):
         for video in os.listdir(self.dataset_directory_path):
@@ -29,11 +35,11 @@ class ModelEvaluator:
             video_path = os.path.join(self.dataset_directory_path,video)
             video = cv2.VideoCapture(video_path)
             self.__evaluate_video(video, video_number)
-
+        self.frame_scores = np.array(self.frame_scores)
+        self.gt_frame_anormalities = np.array(self.gt_frame_anormalities)
+        self.__compute_true_positives_and_false_positives(self.frame_scores,self.gt_frame_anormalities)
     def __evaluate_video(self, video, video_number):
         frames = []
-        frame_scores = []
-        gt_frame_anormalities = []
         counter = 1
         print("Processing video starts ...")
         ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
@@ -48,15 +54,13 @@ class ModelEvaluator:
             counter = counter + 1
 
         for i in range(3, len(frames) - 3):
-            gt_frame_abnormality = False
             frame_ground_truth = ground_truth_detections[0][i]
             detection_boxes_counter = self.__count_detection_boxes(frame_ground_truth)
             if detection_boxes_counter > 0:
-                gt_frame_abnormality = True
                 self.num_gt_detections = self.num_gt_detections + 1
-                gt_frame_anormalities.append(2)
+                self.gt_frame_anormalities.append(1)
             else:
-                gt_frame_anormalities.append(0)
+                self.gt_frame_anormalities.append(0)
 
             frame_score = -1
             frame = frames[i]
@@ -65,11 +69,12 @@ class ModelEvaluator:
             feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
             if feature_vectors.size > 0:
                 feature_vectors = self.trainer_stage2.drop_the_one_hot_encoding(feature_vectors)
-            print('\r', 'Number of frames processed : %d ..... ' % (i), end='', flush=True)
+            print('\r', 'Number of frames processed : %d ..... ' % (len(self.gt_frame_anormalities)), end='', flush=True)
             x, img = data.transforms.presets.ssd.transform_test(frame, short=512)
             ratio1 = img.shape[0]/frame.shape[0]
             ratio2 = img.shape[1]/frame.shape[1]
             copy_frame = frame.asnumpy()
+            start_time = time.time()
             for idx,vector in enumerate(feature_vectors):
                 score = self.trainer_stage2.get_inference_score(vector)
                 c1,l1,c2,l2 = bounding_boxes[idx]
@@ -80,51 +85,21 @@ class ModelEvaluator:
                 if score > self.threshold:
                     if score > frame_score:
                         frame_score = score
-                    top_corner = (c1,l1)
-                    bottom_corner = (c2,l2)
-                    print(top_corner," ; ",bottom_corner," score :: ",score)
-                    if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
-                        cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
-                    else:
-                        cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
-            predicted_frame_abnormality = False
-            if frame_score > self.threshold:
-                predicted_frame_abnormality = True
-
-            if predicted_frame_abnormality == gt_frame_abnormality and predicted_frame_abnormality is True:
-                self.true_positives.append(1)
-                self.false_positives.append(0)
-            else:
-                if predicted_frame_abnormality != gt_frame_abnormality and predicted_frame_abnormality is True:
-                    self.true_positives.append(0)
-                    self.false_positives.append(1)
+                    # top_corner = (c1,l1)
+                    # bottom_corner = (c2,l2)
+                    # print(top_corner," ; ",bottom_corner," score :: ",score)
+                    # if self.__evaluate_detection(frame_ground_truth,(c1,l1,c2,l2)) is True:
+                    #     cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
+                    # else:
+                    #     cv2.rectangle(copy_frame, top_corner, bottom_corner, color=(255, 0, 0), thickness=2)
             if frame_score < self.threshold:
                 frame_score = 0
-            frame_scores.append(frame_score)
-            cv2.imshow("frame", copy_frame)
-            cv2.waitKey(1000)
-            cv2.destroyAllWindows()
+            end_time = time.time()
+            # print("running final inference for all feature vectors took %f seconds " % (end_time - start_time))
+            self.frame_scores.append(frame_score)
+            # cv2.imshow("frame", copy_frame)
+            # cv2.waitKey(1)
 
-        frame_scores = np.array(frame_scores)
-        gt_frame_anormalities = np.array(gt_frame_anormalities)
-        print(frame_scores)
-        x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
-        fig, ax = plt.subplots()
-        ax.plot(x,gt_frame_anormalities, color="red",label = "ground truth")
-        ax.fill_between(x, gt_frame_anormalities, alpha=0.2)
-        ax.plot(x,frame_scores, color="blue",label = "frame_scores")
-        plt.show()
-        plt.close(fig)
-        print(gt_frame_anormalities)
-        frame_scores = (frame_scores-min(frame_scores))/(max(frame_scores)-min(frame_scores))
-        frame_scores = gaussian_filter(frame_scores,sigma = 6)
-        x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
-        fig, ax = plt.subplots()
-        ax.plot(x, gt_frame_anormalities, color="red", label="ground truth")
-        ax.fill_between(x, gt_frame_anormalities, alpha=0.2)
-        ax.plot(x, frame_scores, color="blue", label="frame_scores")
-        plt.show()
-        plt.close(fig)
 
     def __get_feature_vectors_and_bboxes(self, frame, frame_d3, frame_p3):
       """
@@ -136,6 +111,7 @@ class ModelEvaluator:
       :param frame_d3 : mxnet.NDarray - the frame corresponding to t-3 compared to the initial frame. d3 comes from delta3
       :param frame_p3 : mxnet.NDarray  - the frame corresponding to t+3 compared to the initial frame. p3 comes from plus3
       """
+      start_time = time.time()
       object_detector = ObjectDetector(frame)
       bounding_boxes = object_detector.bounding_boxes
       class_ids = object_detector.class_IDs
@@ -143,31 +119,37 @@ class ModelEvaluator:
       if class_ids.size > 0:
           onehot_class_ids[np.arange(class_ids.size), class_ids] = 1
       cropped_detections, cropped_d3, cropped_p3 = object_detector.get_detections_and_cropped_sections(frame_d3,frame_p3)
+
+      end_time = time.time()
+      # print("running object detection took %f seconds " % (end_time - start_time))
       gradient_calculator = GradientCalculator()
       gradients_d3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient_bulk(cropped_d3))
       gradients_p3 = self.__prepare_data_for_CNN(gradient_calculator.calculate_gradient_bulk(cropped_p3))
       cropped_detections = self.__prepare_data_for_CNN(cropped_detections)
       list_of_feature_vectors = []
+      start_time = time.time()
       for i in range(cropped_detections.shape[0]):
           apperance_features = self.trainer_stage2.autoencoder_images.get_encoded_state(np.resize(cropped_detections[i], (64, 64, 1)))
           motion_features_d3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_d3[i], (64, 64, 1)))
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((onehot_class_ids[i], motion_features_d3.flatten(),apperance_features.flatten(), motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          fig, axs = plt.subplots(1, 3)
-          random = randint(0,99999999)
-          axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
-          plt.close(fig)
-          fig, axs = plt.subplots(1, 3)
-          axs[0].imshow(cropped_detections[i]*255, cmap="gray")
-          axs[1].imshow(gradients_d3[i]*255, cmap="gray")
-          axs[2].imshow(gradients_p3[i]*255, cmap="gray")
-          plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
-                                   'feature_vectors' + str(random) + '.png'))
-          plt.close(fig)
+          # fig, axs = plt.subplots(1, 3)
+          # random = randint(0,99999999)
+          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
+          # plt.close(fig)
+          # fig, axs = plt.subplots(1, 3)
+          # axs[0].imshow(cropped_detections[i]*255, cmap="gray")
+          # axs[1].imshow(gradients_d3[i]*255, cmap="gray")
+          # axs[2].imshow(gradients_p3[i]*255, cmap="gray")
+          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
+          #                          'feature_vectors' + str(random) + '.png'))
+          # plt.close(fig)
+      end_time = time.time()
+      # print("running encoders for all feature objects took %f seconds " % (end_time - start_time))
       return np.array(list_of_feature_vectors),bounding_boxes
 
     def __prepare_data_for_CNN(self, array):
@@ -231,6 +213,63 @@ class ModelEvaluator:
                         break
             if ok == 0:
                 break;
+
+    def __compute_true_positives_and_false_positives(self, frame_scores, ground_truth_values):
+        best_threshold = 0
+        best_gaussian_parameter = 0
+        best_avg_precision = 0
+
+        frame_auc_threshold = 0
+        for i in range (35):
+            frame_scores_copy = self.apply_threshold(frame_scores, frame_auc_threshold)
+            for gaussian_parameter in range (5,100,5):
+                true_positives = []
+                false_positives = []
+                frame_scores_smoothened = gaussian_filter(frame_scores_copy, sigma=gaussian_parameter)
+                frame_scores_smoothened = (frame_scores_smoothened - np.min(frame_scores_smoothened)) / (np.max(frame_scores_smoothened) - np.min(frame_scores_smoothened))
+                for (idx,score) in enumerate(frame_scores_smoothened):
+                    if score > 0 and ground_truth_values[idx] > 0:
+                        true_positives.append(1)
+                        false_positives.append(0)
+                    else:
+                        if score > 0 and ground_truth_values[idx] == 0:
+                            true_positives.append(0)
+                            false_positives.append(1)
+                avg_precision = 0
+                if len(true_positives) >0 :
+                    precision_calculator = PrecisionCalculator()
+                    avg_precision = precision_calculator.show_average_precision(true_positives, false_positives,
+                                                            self.num_gt_detections)
+
+                if avg_precision > best_avg_precision:
+                    best_avg_precision = avg_precision
+                    best_threshold = frame_auc_threshold
+                    best_gaussian_parameter = gaussian_parameter
+                    print("Found new best precision :" + str(best_avg_precision) + "for threshold  : " + str(
+                        best_threshold) + "and parameter:" + str(best_gaussian_parameter))
+
+            frame_auc_threshold = frame_auc_threshold + 0.2
+
+        x = np.linspace(0, frame_scores.shape[0], frame_scores.shape[0])
+        frame_scores_copy = self.apply_threshold(frame_scores,frame_auc_threshold)
+        frame_scores_smoothened = gaussian_filter(frame_scores_copy, sigma=best_gaussian_parameter)
+        frame_scores_smoothened = (frame_scores_smoothened - np.min(frame_scores_smoothened)) / (np.max(frame_scores_smoothened) - np.min(frame_scores_smoothened))
+        fig, ax = plt.subplots()
+        ax.plot(x, self.gt_frame_anormalities, color="red", label="ground truth")
+        ax.fill_between(x, self.gt_frame_anormalities, alpha=0.2)
+        ax.plot(x, frame_scores_smoothened, color="blue", label="frame_scores")
+        plt.show()
+        plt.close(fig)
+
+    def apply_threshold(self, frame_scores, threshold):
+        new_scores = []
+        for score in frame_scores:
+            if score > threshold:
+                new_scores.append(score)
+            else:
+                new_scores.append(0)
+        return np.array(new_scores)
+
 
 
 

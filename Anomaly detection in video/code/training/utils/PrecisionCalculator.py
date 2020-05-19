@@ -31,6 +31,8 @@ class PrecisionCalculator:
         plt.title('Average precision %.3f' % average_precision)
         plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
         plt.show()
-        print("Accuraccy is :",
-              str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")
-        print("Num of gt_detections:", str(num_gt_detections))
+        # print("Accuraccy is :",
+        #       str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")
+        # print("Num of gt_detections:", str(num_gt_detections))
+        return average_precision
+

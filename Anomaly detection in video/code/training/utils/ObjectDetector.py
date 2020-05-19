@@ -2,7 +2,8 @@ from gluoncv import model_zoo, data, utils
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-
+import time
+from mxnet import nd
 class ObjectDetector:
     """
     Class used for detecting objects inside a given image
@@ -16,15 +17,13 @@ class ObjectDetector:
     net : pretrained-model from gluoncv, using ssd architecture trained on the coco dataset.
     threshold : int - the threshold for the detections to be considered positive.
     """
-
+    net = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True)
     def __init__(self,image):
-        self.net = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True)
         self.image = image
         self.threshold = 0.5
         self.x_transformed_image, self.img_transformed_image = data.transforms.presets.ssd.transform_test(image, short=512)
-        self.class_IDs, self.scores, self.bounding_boxes = self.net(self.x_transformed_image)
+        self.class_IDs, self.scores, self.bounding_boxes = ObjectDetector.net(self.x_transformed_image)
         self.bounding_boxes,self.scores,self.class_IDs = self.__clean_bounding_boxes_and_scores(self.bounding_boxes[0].asnumpy(), self.scores[0].asnumpy(),self.class_IDs[0].asnumpy())
-
 
     def get_bounding_box_coordinates(self, bounding_boxes, index):
         """
