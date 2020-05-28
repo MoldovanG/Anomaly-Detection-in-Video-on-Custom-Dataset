@@ -19,8 +19,8 @@ class DataSetTrainer_Stage2:
     """
     def __init__(self,dataset_directory_path,autoencoder_images : AutoEncoderModel, autoencoder_gradients : AutoEncoderModel):
         self.num_clusters = 10
-        self.checkpoint_models = "/home/george/Downloads/Licenta-refactored/Avenue Dataset/checkpoints/pretrained_svm"
-        self.saved_feature_vectors_path = "/home/george/Downloads/Licenta-refactored/Avenue Dataset/saved_feature_vectors"
+        self.checkpoint_models = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/pretrained_svm"
+        self.saved_feature_vectors_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/saved_feature_vectors"
         self.dataset_directory_path = dataset_directory_path
         self.autoencoder_images = autoencoder_images
         self.autoencoder_gradients = autoencoder_gradients
@@ -35,7 +35,7 @@ class DataSetTrainer_Stage2:
 
 
     def __cluster_data(self, feature_vectors, num_clusters):
-        clustering_savedir = "/home/george/Downloads/Licenta-refactored/Avenue Dataset/checkpoints/clustering_labels"
+        clustering_savedir = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/clustering_labels"
         if not os.path.exists(clustering_savedir):
             os.mkdir(clustering_savedir)
             print('Clustering data ...')
@@ -86,9 +86,6 @@ class DataSetTrainer_Stage2:
     def __load_model(self):
         model = pickle.load(open(os.path.join(self.checkpoint_models,'model.sav'), 'rb'))
         return model
-
-    def drop_the_one_hot_encoding(self, feature_vectors):
-        return  feature_vectors[:,91:]
 
     def normalize_data(self, feature_vectors):
         normalized = []
