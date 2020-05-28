@@ -25,12 +25,12 @@ class PrecisionCalculator:
         rec = cum_true_positive / num_gt_detections
         prec = cum_true_positive / (cum_true_positive + cum_false_positive)
         average_precision = self.__compute_average_precision(rec, prec)
-        plt.plot(rec, prec, '-')
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.title('Average precision %.3f' % average_precision)
-        plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
-        plt.show()
+        # plt.plot(rec, prec, '-')
+        # plt.xlabel('Recall')
+        # plt.ylabel('Precision')
+        # plt.title('Average precision %.3f' % average_precision)
+        # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'precizie_medie.png'))
+        # plt.show()
         # print("Accuraccy is :",
         #       str(max(cum_true_positive) * (100 / (max(cum_true_positive) + max(cum_false_positive)))), "%")
         # print("Num of gt_detections:", str(num_gt_detections))

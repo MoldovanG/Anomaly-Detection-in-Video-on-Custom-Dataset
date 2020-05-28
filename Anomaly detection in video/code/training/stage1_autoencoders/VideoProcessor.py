@@ -1,7 +1,5 @@
 import cv2
-import mxnet as mx
 import numpy as np
-
 
 from code.training.utils.GradientCalculator import GradientCalculator
 from code.training.utils.ObjectDetector import ObjectDetector
@@ -33,9 +31,6 @@ class VideoProcessor:
             ret, frame = video.read()
             if ret == 0:
                 break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = mx.nd.array(frame)
-            frame = frame.astype(np.uint8)
             object_detector = ObjectDetector(frame)
             detections = object_detector.get_object_detections()
             for image in detections:

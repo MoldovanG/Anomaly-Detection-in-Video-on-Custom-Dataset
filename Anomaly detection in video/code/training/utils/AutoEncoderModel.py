@@ -22,7 +22,7 @@ class AutoEncoderModel:
 
     def __init__(self, input_images, checkpoints_name):
         self.checkpoints_name = checkpoints_name
-        self.checkpoint_dir = '/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/checkpoints_%s' % self.checkpoints_name
+        self.checkpoint_dir = '/home/george/Downloads/Licenta-refactored/Avenue Dataset/checkpoints/checkpoints_%s' % self.checkpoints_name
         self.num_epochs = 100
         self.batch_size = 64
         self.autoencoder, self.encoder = self.__generate_autoencoder()
