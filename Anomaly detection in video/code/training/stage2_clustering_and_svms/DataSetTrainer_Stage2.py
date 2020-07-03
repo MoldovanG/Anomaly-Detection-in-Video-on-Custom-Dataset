@@ -5,10 +5,10 @@ from sklearn import svm
 
 from sklearn.cluster import KMeans
 from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import normalize
 
-from code.training.stage2_clustering_and_svms.VideoProcessor_Stage2 import VideoProcessor_Stage2
-from code.training.utils.AutoEncoderModel import AutoEncoderModel
-
+from stage2_clustering_and_svms.VideoProcessor_Stage2 import VideoProcessor_Stage2
+from utils.AutoEncoderModel import AutoEncoderModel
 
 class DataSetTrainer_Stage2:
     """
@@ -17,15 +17,20 @@ class DataSetTrainer_Stage2:
     and based on that, it will cluster the data, and train the 1 vs all svm models.
     Those models will be later used in the inferrrence phase for predicting the anomalies.
     """
-    def __init__(self,dataset_directory_path,autoencoder_images : AutoEncoderModel, autoencoder_gradients : AutoEncoderModel):
+    def __init__(self,dataset_directory_path,autoencoder_images : AutoEncoderModel, autoencoder_gradients : AutoEncoderModel, norm):
         self.num_clusters = 10
-        self.checkpoint_models = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/pretrained_svm"
-        self.saved_feature_vectors_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/saved_feature_vectors"
+        self.l = norm
         self.dataset_directory_path = dataset_directory_path
+        self.checkpoint_directory = os.path.join(dataset_directory_path,"checkpoints")
+        if not os.path.exists(self.checkpoint_directory):
+            os.mkdir(self.checkpoint_directory)
+        self.checkpoint_models_path = os.path.join(dataset_directory_path, "checkpoints", "pretrained_svm")
+        self.saved_feature_vectors_path = os.path.join(dataset_directory_path,"saved_feature_vectors")
+        self.dataset_training_videos_path = os.path.join(dataset_directory_path,"training_videos")
         self.autoencoder_images = autoencoder_images
         self.autoencoder_gradients = autoencoder_gradients
         self.__feature_vectors = self.__get_dataset_feature_vectors()
-        # self.__feature_vectors = self.normalize_data(self.__feature_vectors)
+        self.__feature_vectors = self.normalize_data(self.__feature_vectors)
         print(self.__feature_vectors.shape)
         print(np.max(self.__feature_vectors[0]), " ", np.min(self.__feature_vectors[0]))
         print(self.__feature_vectors.shape)
@@ -35,7 +40,8 @@ class DataSetTrainer_Stage2:
 
 
     def __cluster_data(self, feature_vectors, num_clusters):
-        clustering_savedir = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/checkpoints/clustering_labels"
+
+        clustering_savedir = os.path.join(self.dataset_directory_path,"checkpoints","clustering_labels")
         if not os.path.exists(clustering_savedir):
             os.mkdir(clustering_savedir)
             print('Clustering data ...')
@@ -44,14 +50,15 @@ class DataSetTrainer_Stage2:
             print('Finished clustering !')
             return kmeans.labels_
         else:
+            print("Clustering labels found !! Automatically loading them ...")
             return np.load(os.path.join(clustering_savedir,"labels.npy"))
 
     def __get_dataset_feature_vectors(self):
         total_feature_vectors = np.resize([],(0,3072))
-        for video_name in os.listdir(self.dataset_directory_path):
+        for video_name in os.listdir(self.dataset_training_videos_path):
             print(video_name)
             name_withouth_extesion = video_name.split(".")[0]
-            video_path = os.path.join(self.dataset_directory_path,video_name)
+            video_path = os.path.join(self.dataset_training_videos_path, video_name)
             feature_vectors = np.array([])
             feature_vector_save_point = os.path.join(self.saved_feature_vectors_path, name_withouth_extesion+".npy")
             if not os.path.exists(feature_vector_save_point):
@@ -67,29 +74,28 @@ class DataSetTrainer_Stage2:
         return total_feature_vectors
 
     def __generate_models(self):
-        if not os.path.exists(self.checkpoint_models):
-            os.mkdir(self.checkpoint_models)
-            checkpoint_model_path = os.path.join(self.checkpoint_models,'model.sav')
-            predictor = svm.LinearSVC(C=1.0,multi_class='ovr',max_iter=len(self.__feature_vectors)*5,loss='hinge')
+        if not os.path.exists(self.checkpoint_models_path):
+            os.mkdir(self.checkpoint_models_path)
+            checkpoint_model_path = os.path.join(self.checkpoint_models_path, 'model.sav')
+            predictor = svm.LinearSVC(C=1.0,multi_class='ovr',max_iter=len(self.__feature_vectors)*5)
             clf = OneVsRestClassifier(predictor)
             clf.fit(self.__feature_vectors,self.__cluster_labels)
             pickle.dump(clf,open(checkpoint_model_path,'wb'))
             return clf
         else:
+            print("Pre-trained OneVsRest classifier found!! Automatically loading it ...")
             return None
 
     def get_inference_score(self,feature_vector):
         scores = self.model.decision_function([feature_vector])[0]
         return -max(scores)
 
-
     def __load_model(self):
-        model = pickle.load(open(os.path.join(self.checkpoint_models,'model.sav'), 'rb'))
+        model = pickle.load(open(os.path.join(self.checkpoint_models_path, 'model.sav'), 'rb'))
         return model
 
     def normalize_data(self, feature_vectors):
-        normalized = []
-        for feature_vector in feature_vectors:
-            norm = (feature_vector - min(feature_vector)) / (max(feature_vector) - min(feature_vector))
-            normalized.append(norm)
-        return np.array(normalized)
+        if self.l == 0 :
+            return feature_vectors
+        else:
+            return normalize(feature_vectors, 'l'+str(self.l))

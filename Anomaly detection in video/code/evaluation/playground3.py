@@ -3,14 +3,13 @@ from code.training.stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataS
 from code.training.utils.AutoEncoderModel import AutoEncoderModel
 from code.training.utils.PrecisionCalculator import PrecisionCalculator
 import time
-autoencoder_images = AutoEncoderModel([],"raw_object_autoencoder")
-autoencoder_gradients = AutoEncoderModel([],"gradient_object_autoencoder")
 
-dataset_directory_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/training_videos"
-final_dataset_trainer = DataSetTrainer_Stage2(dataset_directory_path,autoencoder_images,autoencoder_gradients)
 
-dataset_directory_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/testing_videos"
+dataset_directory_path = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/"
 ground_truth_directory = "/home/george/Licenta/Anomaly detection in video/Avenue Dataset/testing_label_mask"
+autoencoder_images = AutoEncoderModel([],"raw_object_autoencoder",dataset_directory_path)
+autoencoder_gradients = AutoEncoderModel([],"gradient_object_autoencoder",dataset_directory_path)
+final_dataset_trainer = DataSetTrainer_Stage2(dataset_directory_path,autoencoder_images,autoencoder_gradients,0)
 start = time.time()
 modelEvaluator = ModelEvaluator(final_dataset_trainer,dataset_directory_path,ground_truth_directory)
 modelEvaluator.evaluate_dataset()

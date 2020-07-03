@@ -7,7 +7,6 @@ from sklearn.model_selection import train_test_split
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
-import matplotlib.pyplot as plt
 
 
 class AutoEncoderModel:
@@ -20,9 +19,9 @@ class AutoEncoderModel:
     encoder = the encoder part of the autoencoder, sharing the weights with the autoencoder
     """
 
-    def __init__(self, input_images, checkpoints_name):
+    def __init__(self, input_images, checkpoints_name, dataset_directory_path):
         self.checkpoints_name = checkpoints_name
-        self.checkpoint_dir = '/home/george/Downloads/Licenta-refactored/Avenue Dataset/checkpoints/checkpoints_%s' % self.checkpoints_name
+        self.checkpoint_dir = os.path.join(dataset_directory_path,'checkpoints/checkpoints_%s' % self.checkpoints_name)
         self.num_epochs = 100
         self.batch_size = 64
         self.autoencoder, self.encoder = self.__generate_autoencoder()
@@ -71,12 +70,14 @@ class AutoEncoderModel:
             early_stopping_monitor = EarlyStopping(patience=2)
             data_train, data_test, gt_train, gt_test = train_test_split(input_images, input_images, test_size=0.20,
                                                                         random_state=42)
+            print("Checkpoint files not found !! Training of the autoencoders is starting...")
             self.autoencoder.fit(data_train, data_train,
                                  epochs=self.num_epochs,
                                  batch_size=self.batch_size,
                                  validation_data=(data_test, data_test),
                                  callbacks=[checkpoint_callback, early_stopping_monitor])
         else:
+            print("Checkpoint files found !! The autoencoders will be automatically loaded without retraining...")
             self.autoencoder.load_weights(self.checkpoint_dir + '/weights.hdf5')
 
     def get_encoded_state(self, image):

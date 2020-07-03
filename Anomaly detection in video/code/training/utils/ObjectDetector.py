@@ -2,8 +2,6 @@
 import numpy as np
 import cv2
 import cvlib as cv
-from matplotlib import pyplot as plt
-import time
 
 class ObjectDetector:
     """
@@ -20,8 +18,8 @@ class ObjectDetector:
     """
     def __init__(self,image):
         self.image = image
-        self.threshold = 0.65
-        self.bounding_boxes, self.class_IDs, self.scores= cv.detect_common_objects(image,confidence = self.threshold, model = 'yolov3')
+        self.threshold = 0.5
+        self.bounding_boxes, self.class_IDs, self.scores= cv.detect_common_objects(image,confidence = self.threshold, model = 'yolov3-tiny')
     def __get_cropped_detections(self,frame):
         cropped_images = []
         for idx,score in enumerate(self.scores):

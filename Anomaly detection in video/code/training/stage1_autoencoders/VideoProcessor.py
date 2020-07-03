@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from code.training.utils.GradientCalculator import GradientCalculator
-from code.training.utils.ObjectDetector import ObjectDetector
+from utils.GradientCalculator import GradientCalculator
+from utils.ObjectDetector import ObjectDetector
 
 
 class VideoProcessor:
@@ -31,6 +31,7 @@ class VideoProcessor:
             ret, frame = video.read()
             if ret == 0:
                 break
+            frame = cv2.resize(frame, (640, 640))
             object_detector = ObjectDetector(frame)
             detections = object_detector.get_object_detections()
             for image in detections:

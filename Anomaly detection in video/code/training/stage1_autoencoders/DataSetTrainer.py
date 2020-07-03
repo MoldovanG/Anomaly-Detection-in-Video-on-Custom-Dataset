@@ -2,8 +2,8 @@ import os
 
 import numpy as np
 import cv2
-from code.training.utils.AutoEncoderModel import AutoEncoderModel
-from code.training.stage1_autoencoders.VideoProcessor import VideoProcessor
+from training.utils.AutoEncoderModel import AutoEncoderModel
+from training.stage1_autoencoders.VideoProcessor import VideoProcessor
 
 class DataSetTrainer:
     """
@@ -24,8 +24,8 @@ class DataSetTrainer:
         self.total_objects, self.total_gradients = self.__get_objects_and_gradients(verbose=1)
         self.total_objects= self.prepare_data_for_CNN(self.total_objects)
         self.total_gradients = self.prepare_data_for_CNN(self.total_gradients)
-        self.autoencoder_images = AutoEncoderModel(self.total_objects, 'raw_object_autoencoder')
-        self.autoecoder_gradients = AutoEncoderModel(self.total_gradients, 'gradient_object_autoencoder')
+        self.autoencoder_images = AutoEncoderModel(self.total_objects, 'raw_object_autoencoder',dataset_directory_path)
+        self.autoecoder_gradients = AutoEncoderModel(self.total_gradients, 'gradient_object_autoencoder',dataset_directory_path)
 
     def __get_objects_and_gradients(self, verbose=0):
         """
@@ -45,6 +45,7 @@ class DataSetTrainer:
                                                     video_name_without_extension + "_objects")
             video_gradients_save_point = os.path.join(self.dataset_directory_path, "detected_gradients",
                                                       video_name_without_extension + "_gradients")
+
             if not os.path.exists(video_objects_save_point) \
                 and not os.path.exists(video_gradients_save_point):
                 os.makedirs(video_objects_save_point)

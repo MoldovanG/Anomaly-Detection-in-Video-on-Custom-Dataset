@@ -1,13 +1,10 @@
 import os
 import cv2
-import mxnet as mx
 import numpy as np
-import scipy
+from scipy import io
 import time
-from random import randint
 
 from scipy.ndimage import gaussian_filter
-from gluoncv import data
 from code.training.stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
 from code.training.utils.GradientCalculator import GradientCalculator
 from code.training.utils.ObjectDetector import ObjectDetector
@@ -21,6 +18,7 @@ class ModelEvaluator:
     def __init__(self,trainer_stage2 : DataSetTrainer_Stage2, dataset_directory_path,ground_truth_directory):
         self.trainer_stage2 = trainer_stage2
         self.dataset_directory_path = dataset_directory_path
+        self.testing_videos_path = os.path.join(dataset_directory_path, "testing_videos")
         self.ground_truth_directory = ground_truth_directory
         self.true_positives = []
         self.false_positives = []
@@ -32,9 +30,11 @@ class ModelEvaluator:
         self.threshold = 0
 
     def evaluate_dataset(self):
-        for video in os.listdir(self.dataset_directory_path):
+        names = []
+        for video in os.listdir(self.testing_videos_path):
             video_number = int(video.split(".")[0])
-            video_path = os.path.join(self.dataset_directory_path,video)
+            names.append(video_number)
+            video_path = os.path.join(self.testing_videos_path,video)
             video = cv2.VideoCapture(video_path)
             self.__evaluate_video(video, video_number)
         self.frame_scores = np.array(self.frame_scores)
@@ -42,15 +42,20 @@ class ModelEvaluator:
         precisions = []
         for idx, video_frame_scores in enumerate(self.video_frame_scores):
             video_gt_scores = self.video_ground_truth[idx]
-            avg_precision = self.__compute_true_positives_and_false_positives(video_frame_scores,video_gt_scores)
-            precisions.append(avg_precision)
+            if len(video_frame_scores) !=0 :
+                avg_precision = self.__compute_true_positives_and_false_positives(video_frame_scores,video_gt_scores)
+                print(names[idx], "has accuracy: ", avg_precision)
+                precisions.append(avg_precision)
+            else:
+                print(names[idx], " doesn t have frame scores")
         print("Precizia media pe datasetul Avenue este : ", np.mean(np.array(precisions)))
     def __evaluate_video(self, video, video_number):
         frames = []
         counter = 1
         video_results_directory = os.path.join('/home/george/Licenta/Anomaly detection in video/Avenue Dataset/results',str(video_number))
         print("Processing video starts ...")
-        ground_truth_detections = scipy.io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
+        ground_truth_detections = io.loadmat(os.path.join(self.ground_truth_directory,str(video_number)+"_label.mat")).get('volLabel')
+
         local_frame_scores = []
         local_gt_scores = []
         num_gt_detections = 0
@@ -66,7 +71,6 @@ class ModelEvaluator:
                     break
                 frames.append(frame)
                 counter = counter + 1
-
             for i in range(3, len(frames) - 3):
                 frame_ground_truth = ground_truth_detections[0][i]
                 detection_boxes_counter = self.__count_detection_boxes(frame_ground_truth)
@@ -81,6 +85,8 @@ class ModelEvaluator:
                 frame_d3 = frames[i - 3]
                 frame_p3 = frames[i + 3]
                 feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
+                if feature_vectors.shape[0] > 0:
+                    feature_vectors = self.trainer_stage2.normalize_data(feature_vectors)
                 print('\r', 'Number of frames processed : %d ..... ' % (len(local_frame_scores)), end='', flush=True)
                 for idx,vector in enumerate(feature_vectors):
                     score = self.trainer_stage2.get_inference_score(vector)
@@ -261,8 +267,8 @@ class ModelEvaluator:
                     best_avg_precision = avg_precision
                     best_threshold = frame_auc_threshold
                     best_gaussian_parameter = gaussian_parameter
-                    print("Found new best precision :" + str(best_avg_precision) + "for threshold  : " + str(
-                        best_threshold) + "and parameter:" + str(best_gaussian_parameter))
+                    # print("Found new best precision :" + str(best_avg_precision) + "for threshold  : " + str(
+                    #     best_threshold) + "and parameter:" + str(best_gaussian_parameter))
 
             frame_auc_threshold = frame_auc_threshold + 0.1
 

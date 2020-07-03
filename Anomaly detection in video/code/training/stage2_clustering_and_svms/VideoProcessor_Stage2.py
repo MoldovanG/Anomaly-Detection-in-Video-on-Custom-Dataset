@@ -4,10 +4,10 @@ from random import randint
 import cv2
 import numpy as np
 
-from code.training.utils.AutoEncoderModel import AutoEncoderModel
-from code.training.utils.GradientCalculator import GradientCalculator
-from code.training.utils.ObjectDetector import ObjectDetector
-
+from training.utils.AutoEncoderModel import AutoEncoderModel
+from training.utils.GradientCalculator import GradientCalculator
+from training.utils.ObjectDetector import ObjectDetector
+from matplotlib import pyplot as plt
 class VideoProcessor_Stage2:
     """
     Class used for reading and processing a video
@@ -38,6 +38,7 @@ class VideoProcessor_Stage2:
             ret, frame = video.read()
             if ret == 0:
                 break
+            frame = cv2.resize(frame, (640, 640))
             frames.append(frame)
             counter = counter + 1
 
