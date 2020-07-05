@@ -26,6 +26,8 @@ class DataSetTrainer_Stage2:
             os.mkdir(self.checkpoint_directory)
         self.checkpoint_models_path = os.path.join(dataset_directory_path, "checkpoints", "pretrained_svm")
         self.saved_feature_vectors_path = os.path.join(dataset_directory_path,"saved_feature_vectors")
+        if not os.path.exists(self.saved_feature_vectors_path):
+            os.mkdir(self.saved_feature_vectors_path)
         self.dataset_training_videos_path = os.path.join(dataset_directory_path,"training_videos")
         self.autoencoder_images = autoencoder_images
         self.autoencoder_gradients = autoencoder_gradients

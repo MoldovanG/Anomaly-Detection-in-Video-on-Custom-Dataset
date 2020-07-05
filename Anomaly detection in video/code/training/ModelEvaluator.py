@@ -5,12 +5,12 @@ from scipy import io
 import time
 
 from scipy.ndimage import gaussian_filter
-from code.training.stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
-from code.training.utils.GradientCalculator import GradientCalculator
-from code.training.utils.ObjectDetector import ObjectDetector
+from stage2_clustering_and_svms.DataSetTrainer_Stage2 import DataSetTrainer_Stage2
+from utils.GradientCalculator import GradientCalculator
+from utils.ObjectDetector import ObjectDetector
 from matplotlib import pyplot as plt
 
-from code.training.utils.PrecisionCalculator import PrecisionCalculator
+from utils.PrecisionCalculator import PrecisionCalculator
 
 
 class ModelEvaluator:
@@ -49,6 +49,43 @@ class ModelEvaluator:
             else:
                 print(names[idx], " doesn t have frame scores")
         print("Precizia media pe datasetul Avenue este : ", np.mean(np.array(precisions)))
+
+    def visual_results_on_dataset(self):
+        for video in os.listdir(self.testing_videos_path):
+            video_path = os.path.join(self.testing_videos_path, video)
+            video = cv2.VideoCapture(video_path)
+            self.__visual_analisys_on_video(video, )
+    def __visual_analisys_on_video(self, video):
+        frames = []
+        print("Processing video starts ...")
+
+        while True:
+            ret, frame = video.read()
+            if ret == 0:
+                break
+            frames.append(frame)
+        for i in range(3, len(frames) - 3):
+            frame = frames[i]
+            frame_d3 = frames[i - 3]
+            frame_p3 = frames[i + 3]
+            feature_vectors, bounding_boxes = self.__get_feature_vectors_and_bboxes(frame, frame_d3, frame_p3)
+            if feature_vectors.shape[0] > 0:
+                feature_vectors = self.trainer_stage2.normalize_data(feature_vectors)
+            for idx, vector in enumerate(feature_vectors):
+                score = self.trainer_stage2.get_inference_score(vector)
+                c1, l1, c2, l2 = bounding_boxes[idx]
+                if score > self.threshold:
+                    top_corner = (c1, l1)
+                    bottom_corner = (c2, l2)
+                    print(top_corner, " ; ", bottom_corner, " score :: ", score)
+                    cv2.rectangle(frame, top_corner, bottom_corner, color=(0, 255, 0), thickness=2)
+                    cv2.putText(frame, str(round(score, 2)), top_corner, cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                                (0, 255, 0), 2)
+            end_time = time.time()
+            # print("running final inference for all feature vectors took %f seconds " % (end_time - start_time))
+            cv2.imshow("frame", frame)
+            cv2.waitKey(1)
+
     def __evaluate_video(self, video, video_number):
         frames = []
         counter = 1
