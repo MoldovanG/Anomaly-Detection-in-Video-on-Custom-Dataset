@@ -1,4 +1,6 @@
 import os
+from random import randint
+
 import cv2
 import numpy as np
 from scipy import io
@@ -11,7 +13,6 @@ from utils.ObjectDetector import ObjectDetector
 from matplotlib import pyplot as plt
 
 from utils.PrecisionCalculator import PrecisionCalculator
-
 
 class ModelEvaluator:
 
@@ -63,6 +64,7 @@ class ModelEvaluator:
             ret, frame = video.read()
             if ret == 0:
                 break
+            frame = cv2.resize(frame, (640, 640))
             frames.append(frame)
         for i in range(3, len(frames) - 3):
             frame = frames[i]
@@ -190,20 +192,29 @@ class ModelEvaluator:
           motion_features_p3 = self.trainer_stage2.autoencoder_gradients.get_encoded_state(np.resize(gradients_p3[i], (64, 64, 1)))
           feature_vector = np.concatenate((motion_features_d3.flatten(),apperance_features.flatten(), motion_features_p3.flatten()))
           list_of_feature_vectors.append(feature_vector)
-          # fig, axs = plt.subplots(1, 3)
-          # random = randint(0,99999999)
-          # axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
-          # axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
-          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures", 'feature_vectors_predicted'+str(random)+'.png'))
-          # plt.close(fig)
-          # fig, axs = plt.subplots(1, 3)
-          # axs[0].imshow(cropped_detections[i]*255, cmap="gray")
-          # axs[1].imshow(gradients_d3[i]*255, cmap="gray")
-          # axs[2].imshow(gradients_p3[i]*255, cmap="gray")
-          # plt.savefig(os.path.join("/home/george/Licenta/Anomaly detection in video/pictures",
-          #                          'feature_vectors' + str(random) + '.png'))
-          # plt.close(fig)
+          # score = self.trainer_stage2.get_inference_score(feature_vector)
+          # if score < 0:
+          #     fig, axs = plt.subplots(1, 3)
+          #     random = randint(0,99999999)
+          #     axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)),axis=0))[0][:,:,0])*255,cmap="gray")
+          #     axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          #     axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)),axis=0))[0][:,:,0]*255, cmap="gray")
+          #     plt.savefig(os.path.join(os.path.join(self.dataset_directory_path,  'pictures'), 'feature_vectors_normal'+str(random)+'.png'))
+          #     plt.close(fig)
+          # else:
+          #     fig, axs = plt.subplots(1, 3)
+          #     random = randint(0, 99999999)
+          #     axs[0].imshow((self.trainer_stage2.autoencoder_images.autoencoder.predict(
+          #         np.expand_dims(np.resize(cropped_detections[i], (64, 64, 1)), axis=0))[0][:, :, 0]) * 255,
+          #                   cmap="gray")
+          #     axs[1].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(
+          #         np.expand_dims(np.resize(gradients_d3[i], (64, 64, 1)), axis=0))[0][:, :, 0] * 255, cmap="gray")
+          #     axs[2].imshow(self.trainer_stage2.autoencoder_gradients.autoencoder.predict(
+          #         np.expand_dims(np.resize(gradients_p3[i], (64, 64, 1)), axis=0))[0][:, :, 0] * 255, cmap="gray")
+          #     plt.savefig(os.path.join(os.path.join(self.dataset_directory_path, 'pictures'),
+          #                              'feature_vectors_abnormal' + str(random) + '.png'))
+          #     plt.close(fig)
+
       end_time = time.time()
       # print("running encoders for all feature objects took %f seconds " % (end_time - start_time))
       return np.array(list_of_feature_vectors),bounding_boxes
